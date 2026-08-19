@@ -1,18 +1,18 @@
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 
 /**
  * Runs the Kaya chatbot and stores tasks entered by the user.
  */
 public class Kaya {
-    private static final int MAX_TASKS = 100;
     private static final String SYSTEM_NAME = "Kaya";
 
     public static void main(String[] args) {
         greet(SYSTEM_NAME);
 
         Scanner scanner = new Scanner(System.in);
-        Task[] tasks = new Task[MAX_TASKS];
-        int taskCount = 0;
+        List<Task> tasks = new ArrayList<>();
 
         while (scanner.hasNextLine()) {
             String input = scanner.nextLine().trim();
@@ -24,7 +24,7 @@ public class Kaya {
             }
 
             try {
-                taskCount = processCommand(input, tasks, taskCount);
+                processCommand(input, tasks);
             } catch (KayaException exception) {
                 System.out.println("OOPS!!! " + exception.getMessage());
             }
@@ -36,65 +36,60 @@ public class Kaya {
     }
 
     /**
-     * Executes one non-exit command and returns the resulting task count.
+     * Executes one non-exit command.
      *
      * @param input the command entered by the user
-     * @param tasks the array in which tasks are stored
-     * @param taskCount the current number of stored tasks
-     * @return the number of stored tasks after executing the command
+     * @param tasks the list in which tasks are stored
      * @throws KayaException if the command is invalid
      */
-    public static int processCommand(String input, Task[] tasks, int taskCount)
-            throws KayaException {
+    public static void processCommand(String input, List<Task> tasks) throws KayaException {
         if (input.equals("list")) {
-            printTasks(tasks, taskCount);
-            return taskCount;
+            printTasks(tasks);
         } else if (input.equals("mark") || input.startsWith("mark ")) {
-            int taskIndex = parseTaskIndex(input, "mark", taskCount);
-            tasks[taskIndex].markAsDone();
+            int taskIndex = parseTaskIndex(input, "mark", tasks.size());
+            Task task = tasks.get(taskIndex);
+            task.markAsDone();
             System.out.println("Nice! I've marked this task as done:");
-            System.out.println("  " + tasks[taskIndex]);
-            return taskCount;
+            System.out.println("  " + task);
         } else if (input.equals("unmark") || input.startsWith("unmark ")) {
-            int taskIndex = parseTaskIndex(input, "unmark", taskCount);
-            tasks[taskIndex].markAsNotDone();
+            int taskIndex = parseTaskIndex(input, "unmark", tasks.size());
+            Task task = tasks.get(taskIndex);
+            task.markAsNotDone();
             System.out.println("OK, I've marked this task as not done yet:");
-            System.out.println("  " + tasks[taskIndex]);
-            return taskCount;
+            System.out.println("  " + task);
+        } else if (input.equals("delete") || input.startsWith("delete ")) {
+            int taskIndex = parseTaskIndex(input, "delete", tasks.size());
+            Task removedTask = tasks.remove(taskIndex);
+            System.out.println("Noted. I've removed this task:");
+            System.out.println("  " + removedTask);
+            System.out.println("Now you have " + tasks.size() + " tasks in the list.");
         } else if (input.equals("todo") || input.startsWith("todo ")) {
             String description = input.substring("todo".length()).trim();
             if (description.isEmpty()) {
                 throw new KayaException("A todo needs a description.");
             }
-            return addTask(tasks, taskCount, new Todo(description));
+            addTask(tasks, new Todo(description));
         } else if (input.equals("deadline") || input.startsWith("deadline ")) {
-            return addTask(tasks, taskCount, parseDeadline(input));
+            addTask(tasks, parseDeadline(input));
         } else if (input.equals("event") || input.startsWith("event ")) {
-            return addTask(tasks, taskCount, parseEvent(input));
+            addTask(tasks, parseEvent(input));
+        } else {
+            throw new KayaException("I don't recognise that command. "
+                    + "Try todo, deadline, event, list, mark, unmark, delete, or bye.");
         }
-
-        throw new KayaException("I don't recognise that command. "
-                + "Try todo, deadline, event, list, mark, unmark, or bye.");
     }
 
     /**
      * Stores a task and prints a confirmation containing the updated task count.
      *
-     * @param tasks the array in which tasks are stored
-     * @param taskCount the number of tasks stored before this addition
+     * @param tasks the list in which tasks are stored
      * @param task the task to add
-     * @return the updated number of stored tasks
      */
-    public static int addTask(Task[] tasks, int taskCount, Task task) throws KayaException {
-        if (taskCount >= MAX_TASKS) {
-            throw new KayaException("Your task list is full. Complete some tasks first.");
-        }
-        tasks[taskCount] = task;
-        int updatedTaskCount = taskCount + 1;
+    public static void addTask(List<Task> tasks, Task task) {
+        tasks.add(task);
         System.out.println("Got it. I've added this task:");
         System.out.println("  " + task);
-        System.out.println("Now you have " + updatedTaskCount + " tasks in the list.");
-        return updatedTaskCount;
+        System.out.println("Now you have " + tasks.size() + " tasks in the list.");
     }
 
     /**
@@ -158,10 +153,10 @@ public class Kaya {
     }
 
     /**
-     * Parses and validates the one-based task number in a mark or unmark command.
+     * Parses and validates the one-based task number in a task-index command.
      *
      * @param input the complete command
-     * @param command the command word, either {@code mark} or {@code unmark}
+     * @param command the command word, such as {@code mark}, {@code unmark}, or {@code delete}
      * @param taskCount the number of tasks that can be selected
      * @return the corresponding zero-based array index
      * @throws KayaException if the task number is missing, invalid, or out of range
@@ -189,13 +184,12 @@ public class Kaya {
     /**
      * Prints all stored tasks in the order they were added.
      *
-     * @param tasks the array containing the stored tasks
-     * @param taskCount the number of tasks currently stored
+     * @param tasks the list containing the stored tasks
      */
-    public static void printTasks(Task[] tasks, int taskCount) {
+    public static void printTasks(List<Task> tasks) {
         System.out.println("Here are the tasks in your list:");
-        for (int i = 0; i < taskCount; i++) {
-            System.out.println((i + 1) + "." + tasks[i]);
+        for (int i = 0; i < tasks.size(); i++) {
+            System.out.println((i + 1) + "." + tasks.get(i));
         }
     }
 
