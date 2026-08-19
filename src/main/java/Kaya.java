@@ -18,13 +18,12 @@ public class Kaya {
             String input = scanner.nextLine().trim();
             printLine();
 
-            if (input.equals("bye")) {
-                exit();
-                break;
-            }
-
             try {
-                processCommand(input, tasks);
+                CommandType commandType = CommandType.fromInput(input);
+                boolean shouldContinue = processCommand(commandType, input, tasks);
+                if (!shouldContinue) {
+                    break;
+                }
             } catch (KayaException exception) {
                 System.out.println("OOPS!!! " + exception.getMessage());
             }
@@ -36,47 +35,65 @@ public class Kaya {
     }
 
     /**
-     * Executes one non-exit command.
+     * Executes one command.
      *
+     * @param commandType the type of command to execute
      * @param input the command entered by the user
      * @param tasks the list in which tasks are stored
+     * @return {@code false} if Kaya should exit, or {@code true} otherwise
      * @throws KayaException if the command is invalid
      */
-    public static void processCommand(String input, List<Task> tasks) throws KayaException {
-        if (input.equals("list")) {
+    public static boolean processCommand(CommandType commandType, String input,
+                                         List<Task> tasks) throws KayaException {
+        switch (commandType) {
+        case BYE -> {
+            if (!input.equals("bye")) {
+                throw new KayaException("The bye command does not take any extra details.");
+            }
+            exit();
+            return false;
+        }
+        case LIST -> {
+            if (!input.equals("list")) {
+                throw new KayaException("The list command does not take any extra details.");
+            }
             printTasks(tasks);
-        } else if (input.equals("mark") || input.startsWith("mark ")) {
+        }
+        case MARK -> {
             int taskIndex = parseTaskIndex(input, "mark", tasks.size());
             Task task = tasks.get(taskIndex);
             task.markAsDone();
             System.out.println("Nice! I've marked this task as done:");
             System.out.println("  " + task);
-        } else if (input.equals("unmark") || input.startsWith("unmark ")) {
+        }
+        case UNMARK -> {
             int taskIndex = parseTaskIndex(input, "unmark", tasks.size());
             Task task = tasks.get(taskIndex);
             task.markAsNotDone();
             System.out.println("OK, I've marked this task as not done yet:");
             System.out.println("  " + task);
-        } else if (input.equals("delete") || input.startsWith("delete ")) {
+        }
+        case DELETE -> {
             int taskIndex = parseTaskIndex(input, "delete", tasks.size());
             Task removedTask = tasks.remove(taskIndex);
             System.out.println("Noted. I've removed this task:");
             System.out.println("  " + removedTask);
             System.out.println("Now you have " + tasks.size() + " tasks in the list.");
-        } else if (input.equals("todo") || input.startsWith("todo ")) {
+        }
+        case TODO -> {
             String description = input.substring("todo".length()).trim();
             if (description.isEmpty()) {
                 throw new KayaException("A todo needs a description.");
             }
             addTask(tasks, new Todo(description));
-        } else if (input.equals("deadline") || input.startsWith("deadline ")) {
-            addTask(tasks, parseDeadline(input));
-        } else if (input.equals("event") || input.startsWith("event ")) {
-            addTask(tasks, parseEvent(input));
-        } else {
+        }
+        case DEADLINE -> addTask(tasks, parseDeadline(input));
+        case EVENT -> addTask(tasks, parseEvent(input));
+        case UNKNOWN ->
             throw new KayaException("I don't recognise that command. "
                     + "Try todo, deadline, event, list, mark, unmark, delete, or bye.");
         }
+        return true;
     }
 
     /**
