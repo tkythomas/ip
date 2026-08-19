@@ -35,16 +35,72 @@ public class Kaya {
                 tasks[taskIndex].markAsNotDone();
                 System.out.println("OK, I've marked this task as not done yet:");
                 System.out.println("  " + tasks[taskIndex]);
+            } else if (input.startsWith("todo ")) {
+                Task task = new Todo(input.substring(5));
+                taskCount = addTask(tasks, taskCount, task);
+            } else if (input.startsWith("deadline ")) {
+                Task task = parseDeadline(input);
+                taskCount = addTask(tasks, taskCount, task);
+            } else if (input.startsWith("event ")) {
+                Task task = parseEvent(input);
+                taskCount = addTask(tasks, taskCount, task);
             } else {
-                tasks[taskCount] = new Task(input);
-                taskCount++;
-                System.out.println("added: " + input);
+                Task task = new Todo(input);
+                taskCount = addTask(tasks, taskCount, task);
             }
 
             printLine();
         }
 
         scanner.close();
+    }
+
+    /**
+     * Stores a task and prints a confirmation containing the updated task count.
+     *
+     * @param tasks the array in which tasks are stored
+     * @param taskCount the number of tasks stored before this addition
+     * @param task the task to add
+     * @return the updated number of stored tasks
+     */
+    public static int addTask(Task[] tasks, int taskCount, Task task) {
+        tasks[taskCount] = task;
+        int updatedTaskCount = taskCount + 1;
+        System.out.println("Got it. I've added this task:");
+        System.out.println("  " + task);
+        System.out.println("Now you have " + updatedTaskCount + " tasks in the list.");
+        return updatedTaskCount;
+    }
+
+    /**
+     * Converts a deadline command into a deadline task.
+     *
+     * @param input a command in the format {@code deadline DESCRIPTION /by DATE_OR_TIME}
+     * @return the parsed deadline
+     */
+    public static Deadline parseDeadline(String input) {
+        String details = input.substring("deadline ".length());
+        int bySeparator = details.indexOf(" /by ");
+        String description = details.substring(0, bySeparator);
+        String by = details.substring(bySeparator + " /by ".length());
+        return new Deadline(description, by);
+    }
+
+    /**
+     * Converts an event command into an event task.
+     *
+     * @param input a command in the format
+     *              {@code event DESCRIPTION /from START /to END}
+     * @return the parsed event
+     */
+    public static Event parseEvent(String input) {
+        String details = input.substring("event ".length());
+        int fromSeparator = details.indexOf(" /from ");
+        int toSeparator = details.indexOf(" /to ", fromSeparator + " /from ".length());
+        String description = details.substring(0, fromSeparator);
+        String from = details.substring(fromSeparator + " /from ".length(), toSeparator);
+        String to = details.substring(toSeparator + " /to ".length());
+        return new Event(description, from, to);
     }
 
     /**
