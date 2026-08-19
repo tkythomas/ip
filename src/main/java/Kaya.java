@@ -1,8 +1,29 @@
+import java.util.Scanner;
+
+/**
+ * Runs the Kaya chatbot and echoes commands entered by the user.
+ */
 public class Kaya {
     private static final String SYSTEM_NAME = "Kaya";
 
     public static void main(String[] args) {
         greet(SYSTEM_NAME);
+
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            String input = scanner.nextLine();
+            printLine();
+
+            if (input.equals("bye")) {
+                exit();
+                break;
+            }
+
+            System.out.println(input);
+            printLine();
+        }
+
+        scanner.close();
     }
 
     public static void greet(String name) {
@@ -10,8 +31,6 @@ public class Kaya {
         printBanner();
         System.out.println("Hello! I'm " + name + ".");
         System.out.println("What can I do for you?");
-        printLine();
-        System.out.println("Bye. Hope to see you again soon!");
         printLine();
     }
 
@@ -27,6 +46,11 @@ public class Kaya {
 
     public static void printLine() {
         System.out.println("____________________________________________________________");
+    }
+
+    public static void exit() {
+        System.out.println("Bye. Hope to see you again soon!");
+        printLine();
     }
 
 }
