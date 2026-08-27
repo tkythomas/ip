@@ -55,54 +55,54 @@ public class Kaya {
         boolean tasksChanged = false;
 
         switch (commandType) {
-        case BYE -> {
-            requireExactCommand(input, "bye");
-            ui.showMessage("Bye. Hope to see you again soon!");
-            ui.showLine();
-            return false;
-        }
-        case LIST -> {
-            requireExactCommand(input, "list");
-            ui.showTasks(tasks.asList());
-        }
-        case MARK -> {
-            int index = parser.parseTaskIndex(input, "mark", tasks.size());
-            Task task = tasks.get(index);
-            task.markAsDone();
-            ui.showMessage("Nice! I've marked this task as done:");
-            ui.showMessage("  " + task);
-            tasksChanged = true;
-        }
-        case UNMARK -> {
-            int index = parser.parseTaskIndex(input, "unmark", tasks.size());
-            Task task = tasks.get(index);
-            task.markAsNotDone();
-            ui.showMessage("OK, I've marked this task as not done yet:");
-            ui.showMessage("  " + task);
-            tasksChanged = true;
-        }
-        case DELETE -> {
-            int index = parser.parseTaskIndex(input, "delete", tasks.size());
-            Task removedTask = tasks.delete(index);
-            ui.showMessage("Noted. I've removed this task:");
-            ui.showMessage("  " + removedTask);
-            ui.showMessage("Now you have " + tasks.size() + " tasks in the list.");
-            tasksChanged = true;
-        }
-        case TODO -> {
-            addTask(parser.parseTodo(input));
-            tasksChanged = true;
-        }
-        case DEADLINE -> {
-            addTask(parser.parseDeadline(input));
-            tasksChanged = true;
-        }
-        case EVENT -> {
-            addTask(parser.parseEvent(input));
-            tasksChanged = true;
-        }
-        case UNKNOWN -> throw new KayaException("I don't recognise that command. "
-                + "Try todo, deadline, event, list, mark, unmark, delete, or bye.");
+            case BYE -> {
+                requireExactCommand(input, "bye");
+                ui.showMessage("Bye. Hope to see you again soon!");
+                ui.showLine();
+                return false;
+            }
+            case LIST -> {
+                requireExactCommand(input, "list");
+                ui.showTasks(tasks.asList());
+            }
+            case MARK -> {
+                int index = parser.parseTaskIndex(input, "mark", tasks.size());
+                Task task = tasks.get(index);
+                task.markAsDone();
+                ui.showMessage("Nice! I've marked this task as done:");
+                ui.showMessage("  " + task);
+                tasksChanged = true;
+            }
+            case UNMARK -> {
+                int index = parser.parseTaskIndex(input, "unmark", tasks.size());
+                Task task = tasks.get(index);
+                task.markAsNotDone();
+                ui.showMessage("OK, I've marked this task as not done yet:");
+                ui.showMessage("  " + task);
+                tasksChanged = true;
+            }
+            case DELETE -> {
+                int index = parser.parseTaskIndex(input, "delete", tasks.size());
+                Task removedTask = tasks.delete(index);
+                ui.showMessage("Noted. I've removed this task:");
+                ui.showMessage("  " + removedTask);
+                ui.showMessage("Now you have " + tasks.size() + " tasks in the list.");
+                tasksChanged = true;
+            }
+            case TODO -> {
+                addTask(parser.parseTodo(input));
+                tasksChanged = true;
+            }
+            case DEADLINE -> {
+                addTask(parser.parseDeadline(input));
+                tasksChanged = true;
+            }
+            case EVENT -> {
+                addTask(parser.parseEvent(input));
+                tasksChanged = true;
+            }
+            case UNKNOWN -> throw new KayaException("I don't recognise that command. "
+                    + "Try todo, deadline, event, list, mark, unmark, delete, or bye.");
         }
 
         if (tasksChanged) {

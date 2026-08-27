@@ -55,7 +55,7 @@ public class Ui {
 
     /** Displays Kaya's banner. */
     private void showBanner() {
-        String banner =   "  _  __            _  _          \n"
+        String banner = "  _  __            _  _          \n"
                         + " | |/ /   __ _    | || |  __ _   \n"
                         + " | ' <   / _` |    \\_, | / _` |  \n"
                         + " |_|\\_\\  \\__,_|   _|__/  \\__,_|  \n"
