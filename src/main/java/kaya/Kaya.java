@@ -21,7 +21,11 @@ public class Kaya {
     private final TaskList tasks;
     private final Ui ui;
 
-    /** Creates Kaya and loads tasks from the given data file. */
+    /**
+     * Creates Kaya and loads tasks from the given data file.
+     *
+     * @param filePath the path of the task data file
+     */
     public Kaya(Path filePath) {
         parser = new Parser();
         storage = new Storage(filePath);
@@ -29,7 +33,9 @@ public class Kaya {
         tasks = loadTasks();
     }
 
-    /** Runs the command loop until the user exits or input ends. */
+    /**
+     * Runs the command loop until the user exits or input ends.
+     */
     public void run() {
         ui.showGreeting(SYSTEM_NAME);
         while (ui.hasNextCommand()) {
@@ -49,7 +55,14 @@ public class Kaya {
         ui.close();
     }
 
-    /** Executes one command and reports whether the command loop should continue. */
+    /**
+     * Executes one command and reports whether the command loop should continue.
+     *
+     * @param input the full command entered by the user
+     * @return {@code false} when Kaya should exit, or {@code true} otherwise
+     * @throws KayaException if the command is invalid
+     * @throws IOException if updated tasks cannot be saved
+     */
     private boolean processCommand(String input) throws KayaException, IOException {
         CommandType commandType = parser.parseCommandType(input);
         boolean tasksChanged = false;
@@ -111,7 +124,11 @@ public class Kaya {
         return true;
     }
 
-    /** Adds a task and displays confirmation. */
+    /**
+     * Adds a task and displays confirmation.
+     *
+     * @param task the task to add
+     */
     private void addTask(Task task) {
         tasks.add(task);
         ui.showMessage("Got it. I've added this task:");
@@ -119,7 +136,11 @@ public class Kaya {
         ui.showMessage("Now you have " + tasks.size() + " tasks in the list.");
     }
 
-    /** Loads saved tasks or starts with an empty list when loading fails. */
+    /**
+     * Loads saved tasks or starts with an empty list when loading fails.
+     *
+     * @return a task list containing any successfully loaded tasks
+     */
     private TaskList loadTasks() {
         try {
             return new TaskList(storage.loadTasks());
@@ -129,14 +150,24 @@ public class Kaya {
         }
     }
 
-    /** Rejects extra details for a command that takes no arguments. */
+    /**
+     * Rejects extra details for a command that takes no arguments.
+     *
+     * @param input the full command entered by the user
+     * @param command the expected command word
+     * @throws KayaException if the input contains extra details
+     */
     private void requireExactCommand(String input, String command) throws KayaException {
         if (!input.equals(command)) {
             throw new KayaException("The " + command + " command does not take any extra details.");
         }
     }
 
-    /** Starts Kaya using its default relative data-file path. */
+    /**
+     * Starts Kaya using its default relative data-file path.
+     *
+     * @param args command-line arguments, which are not used
+     */
     public static void main(String[] args) {
         new Kaya(DATA_FILE).run();
     }

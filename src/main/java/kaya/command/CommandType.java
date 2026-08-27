@@ -4,14 +4,31 @@ package kaya.command;
  * Represents the commands understood by Kaya.
  */
 public enum CommandType {
+    /** Ends the chatbot session. */
     BYE("bye"),
+
+    /** Displays all stored tasks. */
     LIST("list"),
+
+    /** Marks a task as completed. */
     MARK("mark"),
+
+    /** Marks a task as not completed. */
     UNMARK("unmark"),
+
+    /** Removes a task from the list. */
     DELETE("delete"),
+
+    /** Adds a task without a date. */
     TODO("todo"),
+
+    /** Adds a task with a due date. */
     DEADLINE("deadline"),
+
+    /** Adds a task with starting and ending dates. */
     EVENT("event"),
+
+    /** Represents input that does not match a supported command. */
     UNKNOWN("");
 
     private final String commandWord;

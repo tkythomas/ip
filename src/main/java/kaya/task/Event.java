@@ -45,6 +45,7 @@ public class Event extends Task {
         return to;
     }
 
+    /** {@inheritDoc} */
     @Override
     public String toString() {
         return "[E]" + super.toString() + " (from: " + from.format(DISPLAY_FORMAT)
