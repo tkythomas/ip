@@ -25,3 +25,23 @@ Prerequisites: JDK 25, update Intellij to the most recent version.
    ```
 
 **Warning:** Keep the `src\main\java` folder as the root folder for Java files (i.e., don't rename those folders or move Java files to another folder outside of this folder path), as this is the default location some tools (e.g., Gradle) expect to find Java files.
+
+## Building and running the executable JAR
+
+Kaya requires Java 25. Build the executable JAR from the project root with:
+
+```bash
+./gradlew clean shadowJar
+```
+
+Gradle creates the JAR at `build/libs/kaya.jar`. To run it as a standalone
+application, copy `kaya.jar` into an empty folder, open a terminal in that
+folder, and run:
+
+```bash
+java -jar kaya.jar
+```
+
+Kaya creates its `data/kaya.txt` file relative to the folder from which the JAR
+is run. The generated JAR and runtime data are build artifacts and should not be
+committed to the repository.
