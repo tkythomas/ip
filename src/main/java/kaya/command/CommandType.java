@@ -19,6 +19,9 @@ public enum CommandType {
     /** Removes a task from the list. */
     DELETE("delete"),
 
+    /** Finds tasks containing a keyword. */
+    FIND("find"),
+
     /** Adds a task without a date. */
     TODO("todo"),
 
@@ -33,23 +36,26 @@ public enum CommandType {
 
     private final String commandWord;
 
+    /**
+     * Creates a command type associated with its command word.
+     *
+     * @param commandWord the word used to invoke the command
+     */
     CommandType(String commandWord) {
         this.commandWord = commandWord;
     }
 
     /**
-     * Identifies a command from the first word of the user's input.
+     * Identifies the command type at the start of the input.
      *
-     * @param input the complete input entered by the user
-     * @return the matching command type, or {@link #UNKNOWN} if there is no match
+     * @param input the full command entered by the user
+     * @return the matching command type, or {@link #UNKNOWN}
      */
     public static CommandType fromInput(String input) {
-        int firstSpace = input.indexOf(' ');
-        String firstWord = firstSpace < 0 ? input : input.substring(0, firstSpace);
-
-        for (CommandType type : values()) {
-            if (type != UNKNOWN && type.commandWord.equals(firstWord)) {
-                return type;
+        String commandWord = input.split("\\s+", 2)[0];
+        for (CommandType commandType : values()) {
+            if (commandType.commandWord.equals(commandWord)) {
+                return commandType;
             }
         }
         return UNKNOWN;

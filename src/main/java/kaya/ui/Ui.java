@@ -76,6 +76,25 @@ public class Ui {
      */
     public void showTasks(List<Task> tasks) {
         showMessage("Here are the tasks in your list:");
+        showNumberedTasks(tasks);
+    }
+
+    /**
+     * Displays tasks matching a search keyword with one-based numbers.
+     *
+     * @param tasks the matching tasks to display
+     */
+    public void showMatchingTasks(List<Task> tasks) {
+        showMessage("Here are the matching tasks in your list:");
+        showNumberedTasks(tasks);
+    }
+
+    /**
+     * Displays the supplied tasks with one-based numbers.
+     *
+     * @param tasks the tasks to display
+     */
+    private void showNumberedTasks(List<Task> tasks) {
         for (int i = 0; i < tasks.size(); i++) {
             showMessage((i + 1) + "." + tasks.get(i));
         }

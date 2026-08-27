@@ -11,7 +11,9 @@ import kaya.task.Task;
 import kaya.task.TaskList;
 import kaya.ui.Ui;
 
-/** Coordinates Kaya's user interface, task list, parser, and storage. */
+/**
+ * Coordinates Kaya's user interface, task list, parser, and storage.
+ */
 public class Kaya {
     private static final String SYSTEM_NAME = "Kaya";
     private static final Path DATA_FILE = Path.of("data", "kaya.txt");
@@ -102,6 +104,10 @@ public class Kaya {
                 ui.showMessage("Now you have " + tasks.size() + " tasks in the list.");
                 tasksChanged = true;
             }
+            case FIND -> {
+                String keyword = parser.parseFindKeyword(input);
+                ui.showMatchingTasks(tasks.find(keyword));
+            }
             case TODO -> {
                 addTask(parser.parseTodo(input));
                 tasksChanged = true;
@@ -115,7 +121,7 @@ public class Kaya {
                 tasksChanged = true;
             }
             case UNKNOWN -> throw new KayaException("I don't recognise that command. "
-                    + "Try todo, deadline, event, list, mark, unmark, delete, or bye.");
+                    + "Try todo, deadline, event, list, find, mark, unmark, delete, or bye.");
         }
 
         if (tasksChanged) {
