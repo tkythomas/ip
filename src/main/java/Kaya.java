@@ -1,5 +1,7 @@
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -163,14 +165,14 @@ public class Kaya {
         }
 
         String description = details.substring(0, bySeparator).trim();
-        String by = details.substring(bySeparator + " /by ".length()).trim();
+        String byText = details.substring(bySeparator + " /by ".length()).trim();
         if (description.isEmpty()) {
             throw new KayaException("A deadline needs a description.");
         }
-        if (by.isEmpty()) {
-            throw new KayaException("A deadline needs a date or time after /by.");
+        if (byText.isEmpty()) {
+            throw new KayaException("A deadline needs a date after /by.");
         }
-        return new Deadline(description, by);
+        return new Deadline(description, parseDate(byText));
     }
 
     /**
@@ -194,18 +196,38 @@ public class Kaya {
         }
 
         String description = details.substring(0, fromSeparator).trim();
-        String from = details.substring(fromSeparator + " /from ".length(), toSeparator).trim();
-        String to = details.substring(toSeparator + " /to ".length()).trim();
+        String fromText = details.substring(fromSeparator + " /from ".length(), toSeparator).trim();
+        String toText = details.substring(toSeparator + " /to ".length()).trim();
         if (description.isEmpty()) {
             throw new KayaException("An event needs a description.");
         }
-        if (from.isEmpty()) {
-            throw new KayaException("An event needs a starting date or time after /from.");
+        if (fromText.isEmpty()) {
+            throw new KayaException("An event needs a starting date after /from.");
         }
-        if (to.isEmpty()) {
-            throw new KayaException("An event needs an ending date or time after /to.");
+        if (toText.isEmpty()) {
+            throw new KayaException("An event needs an ending date after /to.");
+        }
+        LocalDate from = parseDate(fromText);
+        LocalDate to = parseDate(toText);
+        if (to.isBefore(from)) {
+            throw new KayaException("An event's ending date cannot be before its starting date.");
         }
         return new Event(description, from, to);
+    }
+
+    /**
+     * Parses a date written in the required ISO format.
+     *
+     * @param dateText the date text to parse
+     * @return the parsed date
+     * @throws KayaException if the date is invalid or is not in {@code yyyy-MM-dd} format
+     */
+    public static LocalDate parseDate(String dateText) throws KayaException {
+        try {
+            return LocalDate.parse(dateText);
+        } catch (DateTimeParseException exception) {
+            throw new KayaException("Use dates in yyyy-MM-dd format, for example 2019-10-15.");
+        }
     }
 
     /**

@@ -2,6 +2,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.DateTimeException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
@@ -63,7 +65,7 @@ public class Storage {
         for (String line : Files.readAllLines(filePath, StandardCharsets.UTF_8)) {
             try {
                 tasks.add(deserialize(line));
-            } catch (IllegalArgumentException exception) {
+            } catch (IllegalArgumentException | DateTimeException exception) {
                 // Skip corrupted records but continue loading the remaining tasks.
             }
         }
@@ -77,11 +79,12 @@ public class Storage {
         String status = task.isDone() ? "1" : "0";
         if (task instanceof Deadline deadline) {
             return String.join(FIELD_SEPARATOR, "D", status,
-                    encode(task.getDescription()), encode(deadline.getBy()));
+                    encode(task.getDescription()), encode(deadline.getBy().toString()));
         }
         if (task instanceof Event event) {
             return String.join(FIELD_SEPARATOR, "E", status,
-                    encode(task.getDescription()), encode(event.getFrom()), encode(event.getTo()));
+                    encode(task.getDescription()), encode(event.getFrom().toString()),
+                    encode(event.getTo().toString()));
         }
         return String.join(FIELD_SEPARATOR, "T", status, encode(task.getDescription()));
     }
@@ -102,11 +105,12 @@ public class Storage {
         }
         case "D" -> {
             requireLength(fields, 4);
-            yield new Deadline(decode(fields[2]), decode(fields[3]));
+            yield new Deadline(decode(fields[2]), LocalDate.parse(decode(fields[3])));
         }
         case "E" -> {
             requireLength(fields, 5);
-            yield new Event(decode(fields[2]), decode(fields[3]), decode(fields[4]));
+            yield new Event(decode(fields[2]), LocalDate.parse(decode(fields[3])),
+                    LocalDate.parse(decode(fields[4])));
         }
         default -> throw new IllegalArgumentException("Unknown task type");
         };
