@@ -25,6 +25,21 @@ public class Parser {
         return new Todo(description);
     }
 
+    /**
+     * Extracts the search keyword from a find command.
+     *
+     * @param input the full find command
+     * @return the non-empty search keyword
+     * @throws KayaException if the keyword is missing
+     */
+    public String parseFindKeyword(String input) throws KayaException {
+        String keyword = input.substring("find".length()).trim();
+        if (keyword.isEmpty()) {
+            throw new KayaException("Tell me what keyword to find.");
+        }
+        return keyword;
+    }
+
     /** Parses a {@code deadline DESCRIPTION /by yyyy-MM-dd} command. */
     public Deadline parseDeadline(String input) throws KayaException {
         String details = input.substring("deadline".length()).trim();

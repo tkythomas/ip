@@ -2,6 +2,7 @@ package kaya.task;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /** Owns Kaya's task collection and its list operations. */
 public class TaskList {
@@ -39,6 +40,24 @@ public class TaskList {
     /** Returns the number of stored tasks. */
     public int size() {
         return tasks.size();
+    }
+
+    /**
+     * Returns tasks whose descriptions contain the keyword, ignoring letter case.
+     *
+     * @param keyword the text to search for
+     * @return matching tasks in their original order
+     */
+    public List<Task> find(String keyword) {
+        String normalizedKeyword = keyword.toLowerCase(Locale.ENGLISH);
+        List<Task> matchingTasks = new ArrayList<>();
+        for (Task task : tasks) {
+            String normalizedDescription = task.getDescription().toLowerCase(Locale.ENGLISH);
+            if (normalizedDescription.contains(normalizedKeyword)) {
+                matchingTasks.add(task);
+            }
+        }
+        return matchingTasks;
     }
 
     /** Returns a copy suitable for display or saving. */

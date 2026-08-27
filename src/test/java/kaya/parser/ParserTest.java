@@ -24,6 +24,17 @@ public class ParserTest {
     }
 
     @Test
+    public void parseFindKeyword_validInput_returnsKeyword() throws KayaException {
+        assertEquals("project meeting", parser.parseFindKeyword("find project meeting"));
+    }
+
+    @Test
+    public void parseFindKeyword_missingKeyword_throwsKayaException() {
+        assertThrows(KayaException.class, () -> parser.parseFindKeyword("find"));
+        assertThrows(KayaException.class, () -> parser.parseFindKeyword("find   "));
+    }
+
+    @Test
     public void parseDeadline_invalidDate_throwsKayaException() {
         assertThrows(KayaException.class,
                 () -> parser.parseDeadline("deadline return book /by 01-09-2026"));

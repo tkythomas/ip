@@ -89,6 +89,10 @@ public class Kaya {
             ui.showMessage("Now you have " + tasks.size() + " tasks in the list.");
             tasksChanged = true;
         }
+        case FIND -> {
+            String keyword = parser.parseFindKeyword(input);
+            ui.showMatchingTasks(tasks.find(keyword));
+        }
         case TODO -> {
             addTask(parser.parseTodo(input));
             tasksChanged = true;
@@ -102,7 +106,7 @@ public class Kaya {
             tasksChanged = true;
         }
         case UNKNOWN -> throw new KayaException("I don't recognise that command. "
-                + "Try todo, deadline, event, list, mark, unmark, delete, or bye.");
+                + "Try todo, deadline, event, list, find, mark, unmark, delete, or bye.");
         }
 
         if (tasksChanged) {
