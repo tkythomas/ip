@@ -1,5 +1,15 @@
+package kaya;
+
 import java.io.IOException;
 import java.nio.file.Path;
+
+import kaya.command.CommandType;
+import kaya.exception.KayaException;
+import kaya.parser.Parser;
+import kaya.storage.Storage;
+import kaya.task.Task;
+import kaya.task.TaskList;
+import kaya.ui.Ui;
 
 /** Coordinates Kaya's user interface, task list, parser, and storage. */
 public class Kaya {
