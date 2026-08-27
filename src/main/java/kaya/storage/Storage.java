@@ -1,3 +1,5 @@
+package kaya.storage;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -7,6 +9,11 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
+
+import kaya.task.Deadline;
+import kaya.task.Event;
+import kaya.task.Task;
+import kaya.task.Todo;
 
 /**
  * Saves and loads Kaya's tasks using a text file on disk.

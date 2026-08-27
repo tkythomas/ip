@@ -1,5 +1,9 @@
+package kaya.ui;
+
 import java.util.List;
 import java.util.Scanner;
+
+import kaya.task.Task;
 
 /** Handles all console input and output for Kaya. */
 public class Ui {

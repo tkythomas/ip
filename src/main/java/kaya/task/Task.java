@@ -1,3 +1,5 @@
+package kaya.task;
+
 /**
  * Represents a task and whether it has been completed.
  */

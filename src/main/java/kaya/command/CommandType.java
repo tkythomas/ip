@@ -1,3 +1,5 @@
+package kaya.command;
+
 /**
  * Represents the commands understood by Kaya.
  */
