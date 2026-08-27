@@ -18,6 +18,24 @@ public class Event extends Task {
         this.to = to;
     }
 
+    /**
+     * Returns the event's starting date or time for saving to disk.
+     *
+     * @return the event's starting date or time
+     */
+    public String getFrom() {
+        return from;
+    }
+
+    /**
+     * Returns the event's ending date or time for saving to disk.
+     *
+     * @return the event's ending date or time
+     */
+    public String getTo() {
+        return to;
+    }
+
     @Override
     public String toString() {
         return "[E]" + super.toString() + " (from: " + from + " to: " + to + ")";

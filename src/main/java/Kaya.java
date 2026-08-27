@@ -1,3 +1,5 @@
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
@@ -7,12 +9,14 @@ import java.util.Scanner;
  */
 public class Kaya {
     private static final String SYSTEM_NAME = "Kaya";
+    private static final Path DATA_FILE = Path.of("data", "kaya.txt");
 
     public static void main(String[] args) {
         greet(SYSTEM_NAME);
 
         Scanner scanner = new Scanner(System.in);
-        List<Task> tasks = new ArrayList<>();
+        Storage storage = new Storage(DATA_FILE);
+        List<Task> tasks = loadTasks(storage);
 
         while (scanner.hasNextLine()) {
             String input = scanner.nextLine().trim();
@@ -21,17 +25,52 @@ public class Kaya {
             try {
                 CommandType commandType = CommandType.fromInput(input);
                 boolean shouldContinue = processCommand(commandType, input, tasks);
+                if (changesTaskList(commandType)) {
+                    storage.saveTasks(tasks);
+                }
                 if (!shouldContinue) {
                     break;
                 }
             } catch (KayaException exception) {
                 System.out.println("OOPS!!! " + exception.getMessage());
+            } catch (IOException exception) {
+                System.out.println("OOPS!!! I couldn't save your tasks: "
+                        + exception.getMessage());
             }
 
             printLine();
         }
 
         scanner.close();
+    }
+
+    /**
+     * Loads saved tasks, or starts with an empty list if the data cannot be read.
+     *
+     * @param storage the storage used by Kaya
+     * @return the loaded tasks, or an empty list when loading fails
+     */
+    private static List<Task> loadTasks(Storage storage) {
+        try {
+            return storage.loadTasks();
+        } catch (IOException exception) {
+            System.out.println("OOPS!!! I couldn't load your saved tasks. "
+                    + "I'll start with an empty list.");
+            return new ArrayList<>();
+        }
+    }
+
+    /**
+     * Returns whether a successfully processed command changes stored task data.
+     *
+     * @param commandType the processed command type
+     * @return {@code true} if the updated tasks should be saved
+     */
+    private static boolean changesTaskList(CommandType commandType) {
+        return switch (commandType) {
+        case MARK, UNMARK, DELETE, TODO, DEADLINE, EVENT -> true;
+        default -> false;
+        };
     }
 
     /**

@@ -30,6 +30,24 @@ public class Task {
     }
 
     /**
+     * Returns the task description for saving to disk.
+     *
+     * @return the task description
+     */
+    public String getDescription() {
+        return description;
+    }
+
+    /**
+     * Returns whether this task has been completed.
+     *
+     * @return {@code true} if the task is completed
+     */
+    public boolean isDone() {
+        return isDone;
+    }
+
+    /**
      * Returns an icon representing the completion status.
      *
      * @return {@code X} when done, or a space when not done
