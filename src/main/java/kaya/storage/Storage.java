@@ -106,20 +106,20 @@ public class Storage {
         }
 
         Task task = switch (fields[0]) {
-        case "T" -> {
-            requireLength(fields, 3);
-            yield new Todo(decode(fields[2]));
-        }
-        case "D" -> {
-            requireLength(fields, 4);
-            yield new Deadline(decode(fields[2]), LocalDate.parse(decode(fields[3])));
-        }
-        case "E" -> {
-            requireLength(fields, 5);
-            yield new Event(decode(fields[2]), LocalDate.parse(decode(fields[3])),
-                    LocalDate.parse(decode(fields[4])));
-        }
-        default -> throw new IllegalArgumentException("Unknown task type");
+            case "T" -> {
+                requireLength(fields, 3);
+                yield new Todo(decode(fields[2]));
+            }
+            case "D" -> {
+                requireLength(fields, 4);
+                yield new Deadline(decode(fields[2]), LocalDate.parse(decode(fields[3])));
+            }
+            case "E" -> {
+                requireLength(fields, 5);
+                yield new Event(decode(fields[2]), LocalDate.parse(decode(fields[3])),
+                        LocalDate.parse(decode(fields[4])));
+            }
+            default -> throw new IllegalArgumentException("Unknown task type");
         };
 
         if (fields[1].equals("1")) {
