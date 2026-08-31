@@ -122,6 +122,7 @@ public class Kaya {
             }
             case UNKNOWN -> throw new KayaException("I don't recognise that command. "
                     + "Try todo, deadline, event, list, find, mark, unmark, delete, or bye.");
+            default -> throw new AssertionError("Unexpected command type: " + commandType);
         }
 
         if (tasksChanged) {
