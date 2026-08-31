@@ -46,9 +46,21 @@ public class Ui {
     public void showGreeting(String name) {
         showLine();
         showBanner();
-        showMessage("Hello! I'm " + name + ".");
-        showMessage("What can I do for you?");
+        showMessages(
+                "Hello! I'm " + name + ".",
+                "What can I do for you?");
         showLine();
+    }
+
+    /**
+     * Displays each supplied message on its own line.
+     *
+     * @param messages the messages to display
+     */
+    private void showMessages(String... messages) {
+        for (String message : messages) {
+            showMessage(message);
+        }
     }
 
     /**
