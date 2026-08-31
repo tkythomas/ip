@@ -36,18 +36,18 @@ public class ParserTest {
 
     @Test
     public void parseDeadline_invalidDate_throwsKayaException() {
-        assertThrows(KayaException.class,
-                () -> parser.parseDeadline("deadline return book /by 01-09-2026"));
-        assertThrows(KayaException.class,
-                () -> parser.parseDeadline("deadline return book /by 2026-02-30"));
+        assertThrows(KayaException.class, () ->
+                parser.parseDeadline("deadline return book /by 01-09-2026"));
+        assertThrows(KayaException.class, () ->
+                parser.parseDeadline("deadline return book /by 2026-02-30"));
     }
 
     @Test
     public void parseDeadline_missingDescriptionOrSeparator_throwsKayaException() {
-        assertThrows(KayaException.class,
-                () -> parser.parseDeadline("deadline /by 2026-09-01"));
-        assertThrows(KayaException.class,
-                () -> parser.parseDeadline("deadline return book 2026-09-01"));
+        assertThrows(KayaException.class, () ->
+                parser.parseDeadline("deadline /by 2026-09-01"));
+        assertThrows(KayaException.class, () ->
+                parser.parseDeadline("deadline return book 2026-09-01"));
     }
 
     @Test
@@ -74,13 +74,13 @@ public class ParserTest {
 
     @Test
     public void parseTaskIndex_invalidNumber_throwsKayaException() {
-        assertThrows(KayaException.class,
-                () -> parser.parseTaskIndex("mark", "mark", 3));
-        assertThrows(KayaException.class,
-                () -> parser.parseTaskIndex("mark two", "mark", 3));
-        assertThrows(KayaException.class,
-                () -> parser.parseTaskIndex("mark 0", "mark", 3));
-        assertThrows(KayaException.class,
-                () -> parser.parseTaskIndex("mark 4", "mark", 3));
+        assertThrows(KayaException.class, () ->
+                parser.parseTaskIndex("mark", "mark", 3));
+        assertThrows(KayaException.class, () ->
+                parser.parseTaskIndex("mark two", "mark", 3));
+        assertThrows(KayaException.class, () ->
+                parser.parseTaskIndex("mark 0", "mark", 3));
+        assertThrows(KayaException.class, () ->
+                parser.parseTaskIndex("mark 4", "mark", 3));
     }
 }
