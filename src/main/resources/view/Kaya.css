@@ -1,0 +1,26 @@
+.root {
+    -fx-background-color: #f4f6f8;
+    -fx-font-family: "Arial";
+    -fx-font-size: 14px;
+}
+
+.scroll-pane,
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+.dialog-label {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 12px;
+    -fx-border-color: #d9dee5;
+    -fx-border-radius: 12px;
+    -fx-padding: 10px;
+    -fx-pref-width: 320px;
+}
+
+.avatar-label {
+    -fx-background-color: #4455aa;
+    -fx-background-radius: 21px;
+    -fx-font-weight: bold;
+    -fx-text-fill: white;
+}

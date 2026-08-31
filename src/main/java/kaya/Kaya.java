@@ -43,81 +43,90 @@ public class Kaya {
         while (ui.hasNextCommand()) {
             String input = ui.readCommand();
             ui.showLine();
-            try {
-                if (!processCommand(input)) {
-                    break;
-                }
-            } catch (KayaException exception) {
-                ui.showError(exception.getMessage());
-            } catch (IOException exception) {
-                ui.showError("I couldn't save your tasks: " + exception.getMessage());
-            }
+            ui.showMessage(getResponse(input));
             ui.showLine();
+            if (input.equals("bye")) {
+                break;
+            }
         }
         ui.close();
     }
 
     /**
-     * Executes one command and reports whether the command loop should continue.
+     * Generates Kaya's response to one user command.
+     *
+     * <p>This method is shared by the console and JavaFX interfaces.</p>
      *
      * @param input the full command entered by the user
-     * @return {@code false} when Kaya should exit, or {@code true} otherwise
+     * @return Kaya's response, including a user-friendly error for invalid input
+     */
+    public String getResponse(String input) {
+        try {
+            return processCommand(input.trim());
+        } catch (KayaException exception) {
+            return "OOPS!!! " + exception.getMessage();
+        } catch (IOException exception) {
+            return "OOPS!!! I couldn't save your tasks: " + exception.getMessage();
+        }
+    }
+
+    /**
+     * Executes one command and returns the resulting response.
+     *
+     * @param input the trimmed command entered by the user
+     * @return Kaya's response to the command
      * @throws KayaException if the command is invalid
      * @throws IOException if updated tasks cannot be saved
      */
-    private boolean processCommand(String input) throws KayaException, IOException {
+    private String processCommand(String input) throws KayaException, IOException {
         CommandType commandType = parser.parseCommandType(input);
         boolean tasksChanged = false;
+        String response;
 
         switch (commandType) {
             case BYE -> {
                 requireExactCommand(input, "bye");
-                ui.showMessage("Bye. Hope to see you again soon!");
-                ui.showLine();
-                return false;
+                response = "Bye. Hope to see you again soon!";
             }
             case LIST -> {
                 requireExactCommand(input, "list");
-                ui.showTasks(tasks.asList());
+                response = formatTasks("Here are the tasks in your list:", tasks.asList());
             }
             case MARK -> {
                 int index = parser.parseTaskIndex(input, "mark", tasks.size());
                 Task task = tasks.get(index);
                 task.markAsDone();
-                ui.showMessage("Nice! I've marked this task as done:");
-                ui.showMessage("  " + task);
+                response = "Nice! I've marked this task as done:\n  " + task;
                 tasksChanged = true;
             }
             case UNMARK -> {
                 int index = parser.parseTaskIndex(input, "unmark", tasks.size());
                 Task task = tasks.get(index);
                 task.markAsNotDone();
-                ui.showMessage("OK, I've marked this task as not done yet:");
-                ui.showMessage("  " + task);
+                response = "OK, I've marked this task as not done yet:\n  " + task;
                 tasksChanged = true;
             }
             case DELETE -> {
                 int index = parser.parseTaskIndex(input, "delete", tasks.size());
                 Task removedTask = tasks.delete(index);
-                ui.showMessage("Noted. I've removed this task:");
-                ui.showMessage("  " + removedTask);
-                ui.showMessage("Now you have " + tasks.size() + " tasks in the list.");
+                response = "Noted. I've removed this task:\n  " + removedTask
+                        + "\nNow you have " + tasks.size() + " tasks in the list.";
                 tasksChanged = true;
             }
             case FIND -> {
                 String keyword = parser.parseFindKeyword(input);
-                ui.showMatchingTasks(tasks.find(keyword));
+                response = formatTasks("Here are the matching tasks in your list:", tasks.find(keyword));
             }
             case TODO -> {
-                addTask(parser.parseTodo(input));
+                response = addTask(parser.parseTodo(input));
                 tasksChanged = true;
             }
             case DEADLINE -> {
-                addTask(parser.parseDeadline(input));
+                response = addTask(parser.parseDeadline(input));
                 tasksChanged = true;
             }
             case EVENT -> {
-                addTask(parser.parseEvent(input));
+                response = addTask(parser.parseEvent(input));
                 tasksChanged = true;
             }
             case UNKNOWN -> throw new KayaException("I don't recognise that command. "
@@ -128,7 +137,7 @@ public class Kaya {
         if (tasksChanged) {
             storage.saveTasks(tasks.asList());
         }
-        return true;
+        return response;
     }
 
     /**
@@ -136,11 +145,27 @@ public class Kaya {
      *
      * @param task the task to add
      */
-    private void addTask(Task task) {
+    private String addTask(Task task) {
         tasks.add(task);
-        ui.showMessage("Got it. I've added this task:");
-        ui.showMessage("  " + task);
-        ui.showMessage("Now you have " + tasks.size() + " tasks in the list.");
+        return "Got it. I've added this task:\n  " + task
+                + "\nNow you have " + tasks.size() + " tasks in the list.";
+    }
+
+    /**
+     * Formats tasks as a heading followed by a one-based numbered list.
+     *
+     * @param heading the text displayed before the tasks
+     * @param matchingTasks the tasks to display
+     * @return the formatted task list
+     */
+    private String formatTasks(String heading, Iterable<Task> matchingTasks) {
+        StringBuilder response = new StringBuilder(heading);
+        int index = 1;
+        for (Task task : matchingTasks) {
+            response.append('\n').append(index).append('.').append(task);
+            index++;
+        }
+        return response.toString();
     }
 
     /**
