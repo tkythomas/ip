@@ -19,6 +19,9 @@ public enum CommandType {
     /** Removes a task from the list. */
     DELETE("delete"),
 
+    /** Updates one field of an existing task. */
+    UPDATE("update"),
+
     /** Finds tasks containing a keyword. */
     FIND("find"),
 
