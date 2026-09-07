@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 
 import kaya.command.CommandType;
+import kaya.command.UpdateCommand;
 import kaya.exception.KayaException;
 import kaya.task.Deadline;
 import kaya.task.Event;
@@ -148,6 +149,29 @@ public class Parser {
             throw new KayaException("That task number is not in your list.");
         }
         return index;
+    }
+
+    /**
+     * Parses a command that updates one field of an existing task.
+     *
+     * @param input the full update command
+     * @param taskCount the number of selectable tasks
+     * @return the parsed update
+     * @throws KayaException if the index, field, or value is invalid
+     */
+    public UpdateCommand parseUpdate(String input, int taskCount) throws KayaException {
+        String[] parts = input.trim().split("\\s+", 4);
+        if (parts.length != 4 || parts[3].isBlank()) {
+            throw new KayaException("Use updates like: update NUMBER /description TEXT, "
+                    + "or update NUMBER /by|/from|/to yyyy-MM-dd.");
+        }
+        int index = parseTaskIndex("update " + parts[1], "update", taskCount);
+        String field = parts[2];
+        if (!field.equals("/description") && !field.equals("/by")
+                && !field.equals("/from") && !field.equals("/to")) {
+            throw new KayaException("Update fields are /description, /by, /from, and /to.");
+        }
+        return new UpdateCommand(index, field, parts[3].trim());
     }
 
     /**

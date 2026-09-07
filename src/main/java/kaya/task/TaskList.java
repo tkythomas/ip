@@ -62,6 +62,18 @@ public class TaskList {
     }
 
     /**
+     * Replaces a task without changing its position.
+     *
+     * @param index the validated zero-based index
+     * @param task the replacement task
+     */
+    public void set(int index, Task task) {
+        assert index >= 0 && index < tasks.size() : "Task index must be validated before replacement";
+        assert task != null : "Replacement task must not be null";
+        tasks.set(index, task);
+    }
+
+    /**
      * Returns the number of stored tasks.
      *
      * @return the task count

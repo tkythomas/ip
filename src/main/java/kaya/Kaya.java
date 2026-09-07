@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import kaya.command.CommandType;
+import kaya.command.UpdateCommand;
 import kaya.exception.KayaException;
 import kaya.parser.Parser;
 import kaya.storage.Storage;
@@ -104,6 +105,13 @@ public class Kaya {
                 response = deleteTask(input);
                 isTasksChanged = true;
             }
+            case UPDATE -> {
+                UpdateCommand update = parser.parseUpdate(input, tasks.size());
+                Task updatedTask = update.applyTo(tasks.get(update.index()));
+                tasks.set(update.index(), updatedTask);
+                response = "Got it. I've updated this task:\n  " + updatedTask;
+                isTasksChanged = true;
+            }
             case FIND -> {
                 response = findTasks(input);
             }
@@ -120,7 +128,7 @@ public class Kaya {
                 isTasksChanged = true;
             }
             case UNKNOWN -> throw new KayaException("I don't recognise that command. "
-                    + "Try todo, deadline, event, list, find, mark, unmark, delete, or bye.");
+                    + "Try todo, deadline, event, list, find, mark, unmark, delete, update, or bye.");
             default -> throw new AssertionError("Unexpected command type: " + commandType);
         }
 
