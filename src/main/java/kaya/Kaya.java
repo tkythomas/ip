@@ -80,7 +80,7 @@ public class Kaya {
      */
     private String processCommand(String input) throws KayaException, IOException {
         CommandType commandType = parser.parseCommandType(input);
-        boolean tasksChanged = false;
+        boolean isTasksChanged = false;
         String response;
 
         switch (commandType) {
@@ -93,57 +93,102 @@ public class Kaya {
                 response = formatTasks("Here are the tasks in your list:", tasks.asList());
             }
             case MARK -> {
-                int index = parser.parseTaskIndex(input, "mark", tasks.size());
-                Task task = tasks.get(index);
-                task.markAsDone();
-                response = "Nice! I've marked this task as done:\n  " + task;
-                tasksChanged = true;
+                response = markTask(input);
+                isTasksChanged = true;
             }
             case UNMARK -> {
-                int index = parser.parseTaskIndex(input, "unmark", tasks.size());
-                Task task = tasks.get(index);
-                task.markAsNotDone();
-                response = "OK, I've marked this task as not done yet:\n  " + task;
-                tasksChanged = true;
+                response = unmarkTask(input);
+                isTasksChanged = true;
             }
             case DELETE -> {
-                int index = parser.parseTaskIndex(input, "delete", tasks.size());
-                Task removedTask = tasks.delete(index);
-                response = "Noted. I've removed this task:\n  " + removedTask
-                        + "\nNow you have " + tasks.size() + " tasks in the list.";
-                tasksChanged = true;
+                response = deleteTask(input);
+                isTasksChanged = true;
             }
             case FIND -> {
-                String keyword = parser.parseFindKeyword(input);
-                response = formatTasks("Here are the matching tasks in your list:", tasks.find(keyword));
+                response = findTasks(input);
             }
             case TODO -> {
                 response = addTask(parser.parseTodo(input));
-                tasksChanged = true;
+                isTasksChanged = true;
             }
             case DEADLINE -> {
                 response = addTask(parser.parseDeadline(input));
-                tasksChanged = true;
+                isTasksChanged = true;
             }
             case EVENT -> {
                 response = addTask(parser.parseEvent(input));
-                tasksChanged = true;
+                isTasksChanged = true;
             }
             case UNKNOWN -> throw new KayaException("I don't recognise that command. "
                     + "Try todo, deadline, event, list, find, mark, unmark, delete, or bye.");
             default -> throw new AssertionError("Unexpected command type: " + commandType);
         }
 
-        if (tasksChanged) {
+        if (isTasksChanged) {
             storage.saveTasks(tasks.asList());
         }
         return response;
     }
 
     /**
-     * Adds a task and displays confirmation.
+     * Marks the selected task as done and returns confirmation.
+     *
+     * @param input the full mark command
+     * @return the response to display
+     * @throws KayaException if the command arguments are invalid
+     */
+    private String markTask(String input) throws KayaException {
+        int index = parser.parseTaskIndex(input, "mark", tasks.size());
+        Task task = tasks.get(index);
+        task.markAsDone();
+        return "Nice! I've marked this task as done:\n  " + task;
+    }
+
+    /**
+     * Marks the selected task as not done and returns confirmation.
+     *
+     * @param input the full unmark command
+     * @return the response to display
+     * @throws KayaException if the command arguments are invalid
+     */
+    private String unmarkTask(String input) throws KayaException {
+        int index = parser.parseTaskIndex(input, "unmark", tasks.size());
+        Task task = tasks.get(index);
+        task.markAsNotDone();
+        return "OK, I've marked this task as not done yet:\n  " + task;
+    }
+
+    /**
+     * Deletes the selected task and returns confirmation.
+     *
+     * @param input the full delete command
+     * @return the response to display
+     * @throws KayaException if the command arguments are invalid
+     */
+    private String deleteTask(String input) throws KayaException {
+        int index = parser.parseTaskIndex(input, "delete", tasks.size());
+        Task removedTask = tasks.delete(index);
+        return "Noted. I've removed this task:\n  " + removedTask
+                + "\nNow you have " + tasks.size() + " tasks in the list.";
+    }
+
+    /**
+     * Finds matching tasks and returns their numbered descriptions.
+     *
+     * @param input the full find command
+     * @return the response to display
+     * @throws KayaException if the command arguments are invalid
+     */
+    private String findTasks(String input) throws KayaException {
+        String keyword = parser.parseFindKeyword(input);
+        return formatTasks("Here are the matching tasks in your list:", tasks.find(keyword));
+    }
+
+    /**
+     * Adds a task and returns confirmation.
      *
      * @param task the task to add
+     * @return the confirmation to display
      */
     private String addTask(Task task) {
         tasks.add(task);
