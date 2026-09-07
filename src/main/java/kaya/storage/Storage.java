@@ -93,6 +93,7 @@ public class Storage {
                     encode(task.getDescription()), encode(event.getFrom().toString()),
                     encode(event.getTo().toString()));
         }
+        assert task instanceof Todo : "Only Todo tasks may use the remaining storage format";
         return String.join(FIELD_SEPARATOR, "T", status, encode(task.getDescription()));
     }
 
