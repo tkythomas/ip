@@ -3,6 +3,7 @@ package kaya.task;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * Owns Kaya's task collection and provides operations for accessing and changing it.
@@ -77,14 +78,9 @@ public class TaskList {
      */
     public List<Task> find(String keyword) {
         String normalizedKeyword = keyword.toLowerCase(Locale.ENGLISH);
-        List<Task> matchingTasks = new ArrayList<>();
-        for (Task task : tasks) {
-            String normalizedDescription = task.getDescription().toLowerCase(Locale.ENGLISH);
-            if (normalizedDescription.contains(normalizedKeyword)) {
-                matchingTasks.add(task);
-            }
-        }
-        return matchingTasks;
+        return tasks.stream()
+                .filter(task -> task.getDescription().toLowerCase(Locale.ENGLISH).contains(normalizedKeyword))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     /**
