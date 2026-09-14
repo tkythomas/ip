@@ -103,4 +103,13 @@ public class TaskList {
     public List<Task> asList() {
         return new ArrayList<>(tasks);
     }
+
+    /**
+     * Copies the list and its tasks so later status changes cannot alter the snapshot.
+     *
+     * @return an independent snapshot for rolling back a failed command
+     */
+    public TaskList copy() {
+        return new TaskList(tasks.stream().map(Task::copy).toList());
+    }
 }

@@ -59,3 +59,36 @@ Missing values, invalid task numbers, unknown or incompatible fields, and
 invalid dates produce a `Hmm. ...` error with an explanation, without changing the task.
 Only one field is interpreted per command: everything after `/description`
 is literal description text, including strings such as `/by`.
+
+## Handling input and file errors
+
+Leading and trailing spaces are ignored. Extra spaces or tabs can separate
+command words, date fields, and dates; spacing inside descriptions is preserved.
+For deadlines, use `/by` exactly once. For events, use `/from` followed by `/to`,
+each exactly once. These date-field tokens are reserved in deadline and event
+commands. For example:
+
+```text
+deadline return book   /by   2026-09-20
+event team meeting   /from   2026-09-20   /to   2026-09-20
+```
+
+Dates must exist on the calendar, and an event's end cannot be before its start.
+Same-day events and duplicate task descriptions are allowed. Invalid commands
+explain what to correct and leave tasks unchanged.
+
+Kaya stores tasks in `data/kaya.txt`, relative to the folder it runs from.
+A missing file is normal on the first run and is created when saving a task.
+If a save fails, the command is rolled back, including completion status.
+Kaya writes a temporary file in the same folder and replaces the saved file only
+after the new contents have been written completely. Check the file and folder
+permissions before retrying; the data path must be a regular file, not a directory
+or symbolic link. If the storage location does not support replacing files safely,
+use a local folder.
+
+If startup cannot read the data file, or encounters damaged records, a warning
+appears in both the GUI and console. Valid records can still be listed or searched,
+but changes are disabled to protect the original file. Close Kaya, back up the
+file, fix its contents or permissions (or restore a known good copy), then restart
+Kaya. Damaged records include empty descriptions, invalid dates, events that end
+before they start, and invalid text encoding.

@@ -83,4 +83,29 @@ public class ParserTest {
         assertThrows(KayaException.class, () ->
                 parser.parseTaskIndex("mark 4", "mark", 3));
     }
+
+    @Test
+    public void parseDateCommands_extraWhitespace_preservesDescriptions() throws KayaException {
+        Deadline deadline = parser.parseDeadline("  deadline\tread  book\t/by\t2026-09-20  ");
+        Event event = parser.parseEvent(" event\tteam  meeting\t/from\t2026-09-20\t/to\t2026-09-20 ");
+
+        assertEquals("read  book", deadline.getDescription());
+        assertEquals(LocalDate.of(2026, 9, 20), deadline.getBy());
+        assertEquals("team  meeting", event.getDescription());
+        assertEquals(event.getFrom(), event.getTo());
+    }
+
+    @Test
+    public void parseDateCommands_repeatedOrReorderedFields_rejectsAmbiguity() {
+        String[] invalidEvents = {
+            "event meeting /to 2026-09-20 /from 2026-09-20 /to 2026-09-21",
+            "event meeting /from 2026-09-20 /from 2026-09-21 /to 2026-09-22",
+            "event meeting /to 2026-09-21 /from 2026-09-20"
+        };
+        for (String input : invalidEvents) {
+            assertThrows(KayaException.class, () -> parser.parseEvent(input), input);
+        }
+        assertThrows(KayaException.class, () -> parser.parseDeadline(
+                "deadline report /by 2026-09-20 /by 2026-09-21"));
+    }
 }

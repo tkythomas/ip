@@ -3,7 +3,10 @@ package kaya;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -67,5 +70,76 @@ public class KayaTest {
 
         assertTrue(response.startsWith("Hmm. I don't recognise that command."));
         assertTrue(response.contains("Try todo, deadline, event, list, find, mark, unmark, delete, update, or bye."));
+    }
+
+    @Test
+    public void getResponse_saveFailure_rollsBackEveryTaskChange() throws IOException {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        Kaya kaya = new Kaya(file);
+        kaya.getResponse("todo read book");
+        kaya.getResponse("todo return book");
+        kaya.getResponse("deadline report /by 2026-09-20");
+        kaya.getResponse("event meeting /from 2026-09-20 /to 2026-09-21");
+        kaya.getResponse("mark 2");
+        kaya.getResponse("mark 3");
+        String originalList = kaya.getResponse("list");
+        String originalFile = Files.readString(file);
+        Path backup = temporaryDirectory.resolve("backup.txt");
+        Files.move(file, backup);
+        Files.createDirectory(file);
+        Path blocker = file.resolve("keep.txt");
+        Files.writeString(blocker, "Do not overwrite this directory.");
+
+        for (String command : List.of("todo extra", "deadline report /by 2026-09-20",
+                "event meeting /from 2026-09-20 /to 2026-09-21", "mark 1", "unmark 2", "unmark 3", "mark 4",
+                "delete 1", "update 1 /description changed", "update 3 /by 2026-09-25")) {
+            assertTrue(kaya.getResponse(command).startsWith("Sorry, I couldn't save"), command);
+            assertEquals(originalList, kaya.getResponse("list"), command);
+            assertEquals(originalFile, Files.readString(backup), command);
+        }
+
+        Files.delete(blocker);
+        Files.delete(file);
+        Files.move(backup, file);
+        assertTrue(kaya.getResponse("mark 1").startsWith("Settled!"));
+        assertEquals(kaya.getResponse("list"), new Kaya(file).getResponse("list"));
+    }
+
+    @Test
+    public void getResponse_failedStartupLoad_doesNotOverwriteRecoveredFile() throws IOException {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        Files.createDirectory(file);
+        Kaya kaya = new Kaya(file);
+        assertTrue(kaya.getStartupWarning().contains("Changes are disabled"));
+        Files.delete(file);
+        String recovered = "T | 0 | cmVjb3ZlcmVk\n";
+        Files.writeString(file, recovered);
+
+        assertTrue(kaya.getResponse("todo new task").startsWith("Sorry, I couldn't save"));
+        assertEquals(recovered, Files.readString(file));
+        assertEquals("Your task list is empty. Time for a kopi break?", kaya.getResponse("list"));
+    }
+
+    @Test
+    public void getResponse_corruptedStartupData_allowsReadingButProtectsTheFile() throws IOException {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        String original = "T | 0 | cmVhZCBib29r\nmalformed record\n";
+        Files.writeString(file, original);
+        Kaya kaya = new Kaya(file);
+
+        assertTrue(kaya.getStartupWarning().contains("1 unreadable task record"));
+        assertEquals("Here's what's on your plate:\n1.[T][ ] read book", kaya.getResponse("list"));
+        assertTrue(kaya.getResponse("mark 1").startsWith("Sorry, I couldn't save"));
+        assertEquals(original, Files.readString(file));
+        assertEquals("Here's what's on your plate:\n1.[T][ ] read book", kaya.getResponse("list"));
+    }
+
+    @Test
+    public void getResponse_blankInput_returnsGuidanceWithoutChangingTasks() {
+        Kaya kaya = new Kaya(temporaryDirectory.resolve("tasks.txt"));
+        for (String input : new String[] {null, "", " \t "}) {
+            assertTrue(kaya.getResponse(input).contains("Enter a command"));
+        }
+        assertEquals("Your task list is empty. Time for a kopi break?", kaya.getResponse("list"));
     }
 }

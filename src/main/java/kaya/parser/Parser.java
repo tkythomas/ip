@@ -2,6 +2,9 @@ package kaya.parser;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.regex.MatchResult;
+import java.util.regex.Pattern;
 
 import kaya.command.CommandType;
 import kaya.command.UpdateCommand;
@@ -14,6 +17,9 @@ import kaya.task.Todo;
  * Interprets user input and converts it into commands and task data Kaya can use.
  */
 public class Parser {
+    /** Recognises date-field tokens separated by whitespace, including tabs. */
+    private static final Pattern DATE_FIELD = Pattern.compile("(?<!\\S)/(?:by|from|to)(?=\\s|$)");
+
     /**
      * Creates a parser for interpreting Kaya commands.
      */
@@ -39,7 +45,7 @@ public class Parser {
      * @throws KayaException if the description is missing
      */
     public Todo parseTodo(String input) throws KayaException {
-        String description = input.substring("todo".length()).trim();
+        String description = input.trim().substring("todo".length()).trim();
         if (description.isEmpty()) {
             throw new KayaException("A todo needs a description.");
         }
@@ -54,7 +60,7 @@ public class Parser {
      * @throws KayaException if the keyword is missing
      */
     public String parseFindKeyword(String input) throws KayaException {
-        String keyword = input.substring("find".length()).trim();
+        String keyword = input.trim().substring("find".length()).trim();
         if (keyword.isEmpty()) {
             throw new KayaException("Tell me what keyword to find.");
         }
@@ -69,13 +75,10 @@ public class Parser {
      * @throws KayaException if the description, separator, or date is invalid
      */
     public Deadline parseDeadline(String input) throws KayaException {
-        String details = input.substring("deadline".length()).trim();
-        int separator = details.indexOf(" /by ");
-        if (separator < 0) {
-            throw new KayaException("Use deadlines like: deadline DESCRIPTION /by yyyy-MM-dd.");
-        }
-        String description = details.substring(0, separator).trim();
-        String byText = details.substring(separator + " /by ".length()).trim();
+        String details = input.trim().substring("deadline".length()).trim();
+        String[] fields = splitDateFields(details, "/by");
+        String description = fields[0];
+        String byText = fields[1];
         if (description.isEmpty()) {
             throw new KayaException("A deadline needs a description.");
         }
@@ -93,20 +96,11 @@ public class Parser {
      * @throws KayaException if required details are missing or invalid
      */
     public Event parseEvent(String input) throws KayaException {
-        String details = input.substring("event".length()).trim();
-        int fromSeparator = details.indexOf(" /from ");
-        if (fromSeparator < 0) {
-            throw new KayaException(
-                    "Use events like: event DESCRIPTION /from yyyy-MM-dd /to yyyy-MM-dd.");
-        }
-        int toSeparator = details.indexOf(" /to ", fromSeparator + " /from ".length());
-        if (toSeparator < 0) {
-            throw new KayaException("An event needs an ending date after /to.");
-        }
-
-        String description = details.substring(0, fromSeparator).trim();
-        String fromText = details.substring(fromSeparator + " /from ".length(), toSeparator).trim();
-        String toText = details.substring(toSeparator + " /to ".length()).trim();
+        String details = input.trim().substring("event".length()).trim();
+        String[] fields = splitDateFields(details, "/from", "/to");
+        String description = fields[0];
+        String fromText = fields[1];
+        String toText = fields[2];
         if (description.isEmpty()) {
             throw new KayaException("An event needs a description.");
         }
@@ -126,6 +120,35 @@ public class Parser {
     }
 
     /**
+     * Separates a description from date values without changing its internal spacing.
+     *
+     * @param details the command arguments after the command word
+     * @param expectedFields the required date fields in their expected order
+     * @return the description followed by the trimmed date values
+     * @throws KayaException if a field is missing, repeated, unexpected, or out of order
+     */
+    private String[] splitDateFields(String details, String... expectedFields) throws KayaException {
+        List<MatchResult> separators = DATE_FIELD.matcher(details).results().toList();
+        String guidance = "Use these date fields exactly once and in this order: "
+                + String.join(" ", expectedFields) + ". Put a yyyy-MM-dd date after each field.";
+        if (separators.size() != expectedFields.length) {
+            throw new KayaException(guidance);
+        }
+        String[] values = new String[expectedFields.length + 1];
+        int previousEnd = 0;
+        for (int i = 0; i < expectedFields.length; i++) {
+            MatchResult separator = separators.get(i);
+            if (!separator.group().equals(expectedFields[i])) {
+                throw new KayaException(guidance);
+            }
+            values[i] = details.substring(previousEnd, separator.start()).trim();
+            previousEnd = separator.end();
+        }
+        values[expectedFields.length] = details.substring(previousEnd).trim();
+        return values;
+    }
+
+    /**
      * Parses and validates a one-based task number, returning a zero-based index.
      *
      * @param input the full task-index command
@@ -135,7 +158,7 @@ public class Parser {
      * @throws KayaException if the number is missing, invalid, or out of range
      */
     public int parseTaskIndex(String input, String command, int taskCount) throws KayaException {
-        String taskNumber = input.substring(command.length()).trim();
+        String taskNumber = input.trim().substring(command.length()).trim();
         if (taskNumber.isEmpty()) {
             throw new KayaException("Tell me which task number to " + command + ".");
         }

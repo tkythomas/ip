@@ -35,6 +35,12 @@ public class Deadline extends Task {
 
     /** {@inheritDoc} */
     @Override
+    public Task copy() {
+        return copyStatusTo(new Deadline(getDescription(), by));
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public String toString() {
         return "[D]" + super.toString() + " (by: " + by.format(DISPLAY_FORMAT) + ")";
     }

@@ -50,6 +50,28 @@ public class Task {
     }
 
     /**
+     * Creates an independent copy for restoring the task after a failed save.
+     *
+     * @return a copy with the same description and completion status
+     */
+    public Task copy() {
+        return copyStatusTo(new Task(description));
+    }
+
+    /**
+     * Copies completion status onto a newly created task of the same type.
+     *
+     * @param copy the task whose description and dates have already been copied
+     * @return the copy with this task's completion status
+     */
+    protected Task copyStatusTo(Task copy) {
+        if (isDone) {
+            copy.markAsDone();
+        }
+        return copy;
+    }
+
+    /**
      * Returns an icon representing the completion status.
      *
      * @return {@code X} when done, or a space when not done

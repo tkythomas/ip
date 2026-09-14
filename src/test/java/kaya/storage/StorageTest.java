@@ -3,15 +3,20 @@ package kaya.storage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.nio.file.attribute.PosixFilePermission;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -74,6 +79,10 @@ public class StorageTest {
 
         assertEquals(1, loadedTasks.size());
         assertEquals("valid task", loadedTasks.get(0).getDescription());
+        assertEquals(1, storage.getSkippedRecordCount());
+        String original = Files.readString(file);
+        assertThrows(IOException.class, () -> storage.saveTasks(List.of(new Todo("replacement"))));
+        assertEquals(original, Files.readString(file));
     }
 
     @Test
@@ -85,5 +94,69 @@ public class StorageTest {
 
         assertTrue(Files.exists(file));
         assertTrue(storage.loadTasks().isEmpty());
+    }
+
+    @Test
+    public void loadTasks_invalidStoredValues_skipsAndProtectsOriginalData() throws IOException {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        Storage storage = new Storage(file);
+        storage.saveTasks(List.of(new Todo("valid task"), new Todo("   "),
+                new Event("reversed event", LocalDate.of(2026, 9, 21), LocalDate.of(2026, 9, 20))));
+        Files.writeString(file, "T | 0 | _w==\n", StandardOpenOption.APPEND);
+        String original = Files.readString(file);
+
+        List<Task> loaded = storage.loadTasks();
+
+        assertEquals(1, loaded.size());
+        assertEquals("valid task", loaded.get(0).getDescription());
+        assertEquals(3, storage.getSkippedRecordCount());
+        assertThrows(IOException.class, () -> storage.saveTasks(loaded));
+        assertEquals(original, Files.readString(file));
+    }
+
+    @Test
+    public void saveTasks_repeatedSave_replacesFileWithoutLeavingTemporaryFiles() throws IOException {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        Storage storage = new Storage(file);
+        storage.saveTasks(List.of(new Todo("before")));
+        storage.saveTasks(List.of(new Todo("after")));
+
+        assertEquals("after", storage.loadTasks().get(0).getDescription());
+        try (var files = Files.list(temporaryDirectory)) {
+            assertEquals(List.of(file), files.toList());
+        }
+    }
+
+    @Test
+    public void saveTasks_readOnlyFile_preservesItsContents() throws IOException {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        Storage storage = new Storage(file);
+        storage.saveTasks(List.of(new Todo("original")));
+        assumeTrue(Files.getFileStore(file).supportsFileAttributeView("posix"));
+        Set<PosixFilePermission> originalPermissions = Files.getPosixFilePermissions(file);
+        String original = Files.readString(file);
+        try {
+            Files.setPosixFilePermissions(file, Set.of(PosixFilePermission.OWNER_READ));
+            assumeFalse(Files.isWritable(file), "This account can override file permissions.");
+            assertThrows(IOException.class, () -> storage.saveTasks(List.of(new Todo("replacement"))));
+            assertEquals(original, Files.readString(file));
+        } finally {
+            Files.setPosixFilePermissions(file, originalPermissions);
+        }
+    }
+
+    @Test
+    public void loadTasks_symbolicLink_preservesLinkAndTarget() throws IOException {
+        assumeTrue(Files.getFileStore(temporaryDirectory).supportsFileAttributeView("posix"));
+        Path target = temporaryDirectory.resolve("original.txt");
+        Files.writeString(target, "original data");
+        Path link = temporaryDirectory.resolve("tasks.txt");
+        Files.createSymbolicLink(link, target);
+        Storage storage = new Storage(link);
+
+        assertThrows(IOException.class, storage::loadTasks);
+        assertThrows(IOException.class, () -> storage.saveTasks(List.of(new Todo("replacement"))));
+        assertTrue(Files.isSymbolicLink(link));
+        assertEquals("original data", Files.readString(target));
     }
 }

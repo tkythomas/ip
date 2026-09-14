@@ -47,6 +47,12 @@ public class Event extends Task {
 
     /** {@inheritDoc} */
     @Override
+    public Task copy() {
+        return copyStatusTo(new Event(getDescription(), from, to));
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public String toString() {
         return "[E]" + super.toString() + " (from: " + from.format(DISPLAY_FORMAT)
                 + " to: " + to.format(DISPLAY_FORMAT) + ")";
