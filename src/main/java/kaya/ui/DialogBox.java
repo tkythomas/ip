@@ -1,32 +1,37 @@
 package kaya.ui;
 
 import java.io.IOException;
-import java.util.Collections;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 
 /**
  * Displays one chat message together with a label identifying its speaker.
  */
 public class DialogBox extends HBox {
+    /**
+     * Keeps user messages narrower so the two sides are easy to distinguish.
+     */
+    private static final double USER_WIDTH_RATIO = 0.8;
+
     @FXML
     private Label dialog;
 
     @FXML
-    private Label avatar;
+    private Label speakerLabel;
+
+    @FXML
+    private VBox messageContainer;
 
     /**
      * Loads the reusable dialog layout and fills it with one message.
      *
      * @param text the message to display
-     * @param speaker the short speaker label
+     * @param speaker the speaker label
      */
     private DialogBox(String text, String speaker) {
         try {
@@ -38,7 +43,7 @@ public class DialogBox extends HBox {
             throw new IllegalStateException("Unable to load the dialog-box layout", exception);
         }
         dialog.setText(text);
-        avatar.setText(speaker);
+        speakerLabel.setText(speaker);
     }
 
     /**
@@ -48,7 +53,12 @@ public class DialogBox extends HBox {
      * @return the user dialog
      */
     public static DialogBox getUserDialog(String text) {
-        return new DialogBox(text, "You");
+        DialogBox dialogBox = new DialogBox(text, "YOU");
+        dialogBox.getStyleClass().add("user-dialog");
+        dialogBox.setAlignment(Pos.TOP_RIGHT);
+        dialogBox.messageContainer.setAlignment(Pos.TOP_RIGHT);
+        dialogBox.messageContainer.maxWidthProperty().bind(dialogBox.widthProperty().multiply(USER_WIDTH_RATIO));
+        return dialogBox;
     }
 
     /**
@@ -58,18 +68,9 @@ public class DialogBox extends HBox {
      * @return Kaya's dialog
      */
     public static DialogBox getKayaDialog(String text) {
-        DialogBox dialogBox = new DialogBox(text, "K");
-        dialogBox.flip();
+        DialogBox dialogBox = new DialogBox(text, "KAYA");
+        dialogBox.getStyleClass().add("kaya-dialog");
+        dialogBox.messageContainer.maxWidthProperty().bind(dialogBox.widthProperty());
         return dialogBox;
-    }
-
-    /**
-     * Places the speaker label on the left for Kaya's messages.
-     */
-    private void flip() {
-        ObservableList<Node> children = FXCollections.observableArrayList(getChildren());
-        Collections.reverse(children);
-        getChildren().setAll(children);
-        setAlignment(Pos.TOP_LEFT);
     }
 }
