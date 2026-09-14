@@ -55,7 +55,7 @@ public enum CommandType {
      * @return the matching command type, or {@link #UNKNOWN}
      */
     public static CommandType fromInput(String input) {
-        String commandWord = input.split("\\s+", 2)[0];
+        String commandWord = input.trim().split("\\s+", 2)[0];
         for (CommandType commandType : values()) {
             if (commandType.commandWord.equals(commandWord)) {
                 return commandType;

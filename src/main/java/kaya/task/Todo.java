@@ -15,6 +15,12 @@ public class Todo extends Task {
 
     /** {@inheritDoc} */
     @Override
+    public Task copy() {
+        return copyStatusTo(new Todo(getDescription()));
+    }
+
+    /** {@inheritDoc} */
+    @Override
     public String toString() {
         return "[T]" + super.toString();
     }

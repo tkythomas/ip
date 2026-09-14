@@ -54,6 +54,9 @@ public class MainWindow {
     public void setKaya(Kaya kaya) {
         this.kaya = kaya;
         dialogContainer.getChildren().add(DialogBox.getKayaDialog(Messages.GREETING));
+        if (!kaya.getStartupWarning().isEmpty()) {
+            dialogContainer.getChildren().add(DialogBox.getKayaDialog(kaya.getStartupWarning()));
+        }
     }
 
     /**

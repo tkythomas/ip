@@ -21,8 +21,11 @@ public class Kaya {
 
     private final Parser parser;
     private final Storage storage;
-    private final TaskList tasks;
     private final Ui ui;
+    private TaskList tasks;
+
+    /** Explains any problem loading saved tasks in both user interfaces. */
+    private String startupWarning = "";
 
     /**
      * Creates Kaya and loads tasks from the given data file.
@@ -41,6 +44,9 @@ public class Kaya {
      */
     public void run() {
         ui.showGreeting();
+        if (!startupWarning.isEmpty()) {
+            ui.showMessage(startupWarning);
+        }
         while (ui.hasNextCommand()) {
             String input = ui.readCommand();
             ui.showLine();
@@ -62,13 +68,28 @@ public class Kaya {
      * @return Kaya's response, including a user-friendly error for invalid input
      */
     public String getResponse(String input) {
+        if (input == null || input.isBlank()) {
+            return Messages.ERROR_PREFIX + "Enter a command, for example: todo read a book.";
+        }
+        TaskList previousTasks = tasks.copy();
         try {
             return processCommand(input.trim());
         } catch (KayaException exception) {
+            tasks = previousTasks;
             return Messages.ERROR_PREFIX + exception.getMessage();
         } catch (IOException exception) {
-            return "Sorry, I couldn't save your tasks: " + exception.getMessage();
+            tasks = previousTasks;
+            return "Sorry, I couldn't save your tasks. No changes were applied.\n" + exception.getMessage();
         }
+    }
+
+    /**
+     * Returns a startup warning that must also be visible in the graphical interface.
+     *
+     * @return the warning, or an empty string when all saved tasks loaded normally
+     */
+    public String getStartupWarning() {
+        return startupWarning;
     }
 
     /**
@@ -205,15 +226,23 @@ public class Kaya {
     }
 
     /**
-     * Loads saved tasks or starts with an empty list when loading fails.
+     * Loads readable tasks and records a warning if storage has disabled changes.
      *
      * @return a task list containing any successfully loaded tasks
      */
     private TaskList loadTasks() {
         try {
-            return new TaskList(storage.loadTasks());
+            TaskList loadedTasks = new TaskList(storage.loadTasks());
+            if (storage.getSkippedRecordCount() > 0) {
+                startupWarning = "Sorry, I skipped " + storage.getSkippedRecordCount()
+                        + " unreadable task record(s).\nChanges are disabled to protect your saved data. "
+                        + "Fix or restore the data file and restart Kaya.";
+            }
+            return loadedTasks;
         } catch (IOException exception) {
-            ui.showError("I couldn't load your saved tasks. I'll start with an empty list.");
+            startupWarning = "Sorry, I couldn't load your saved tasks: " + exception.getMessage()
+                    + "\nChanges are disabled to protect your saved data. "
+                    + "Fix the file or its permissions and restart Kaya.";
             return new TaskList();
         }
     }
