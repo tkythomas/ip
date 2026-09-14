@@ -146,7 +146,7 @@ public class Parser {
             throw new KayaException("The task number must be a whole number.");
         }
         if (index < 0 || index >= taskCount) {
-            throw new KayaException("That task number is not in your list.");
+            throw new KayaException("That task number is not in your list. Type list to check the task numbers.");
         }
         return index;
     }

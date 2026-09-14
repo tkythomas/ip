@@ -4,7 +4,10 @@
 
 // Product screenshot goes here
 
-// Product intro goes here
+Kaya is your kopitiam companion for keeping track of tasks. Grab a kopi,
+add what's on your plate, and work through it one thing at a time.
+Kaya uses friendly phrases while keeping command instructions and error
+messages clear.
 
 ## Adding deadlines
 
@@ -48,11 +51,11 @@ start beyond the current end.
 Example response for an incomplete Todo:
 
 ```text
-Got it. I've updated this task:
+All sorted. I've updated this task:
   [T][ ] read chapter 2
 ```
 
 Missing values, invalid task numbers, unknown or incompatible fields, and
-invalid dates produce an `OOPS!!!` error without changing the task.
+invalid dates produce a `Hmm. ...` error with an explanation, without changing the task.
 Only one field is interpreted per command: everything after `/description`
 is literal description text, including strings such as `/by`.

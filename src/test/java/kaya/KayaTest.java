@@ -8,6 +8,9 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+/**
+ * Checks command replies and their effects on saved tasks.
+ */
 public class KayaTest {
     @TempDir
     private Path temporaryDirectory;
@@ -19,9 +22,8 @@ public class KayaTest {
         String addResponse = kaya.getResponse("todo read book");
         String listResponse = kaya.getResponse("list");
 
-        assertTrue(addResponse.contains("Got it. I've added this task:"));
-        assertTrue(addResponse.contains("[T][ ] read book"));
-        assertEquals("Here are the tasks in your list:\n1.[T][ ] read book", listResponse);
+        assertEquals("Added to your plate:\n  [T][ ] read book\nYou have 1 task on your plate.", addResponse);
+        assertEquals("Here's what's on your plate:\n1.[T][ ] read book", listResponse);
     }
 
     @Test
@@ -30,19 +32,20 @@ public class KayaTest {
         Kaya kaya = new Kaya(dataFile);
         kaya.getResponse("todo read book");
 
-        assertEquals("Nice! I've marked this task as done:\n  [T][X] read book",
+        assertEquals("Settled! You've finished:\n  [T][X] read book",
                 kaya.getResponse("mark 1"));
-        assertEquals("Here are the tasks in your list:\n1.[T][X] read book",
+        assertEquals("Here's what's on your plate:\n1.[T][X] read book",
                 new Kaya(dataFile).getResponse("list"));
-        assertEquals("OK, I've marked this task as not done yet:\n  [T][ ] read book",
+        assertEquals("No rush. I've marked this task as not done yet:\n  [T][ ] read book",
                 kaya.getResponse("unmark 1"));
-        assertEquals("Here are the tasks in your list:\n1.[T][ ] read book",
+        assertEquals("Here's what's on your plate:\n1.[T][ ] read book",
                 new Kaya(dataFile).getResponse("list"));
-        assertEquals("Here are the matching tasks in your list:\n1.[T][ ] read book",
+        assertEquals("Here's what I found on your plate:\n1.[T][ ] read book",
                 kaya.getResponse("find BOOK"));
-        assertEquals("Noted. I've removed this task:\n  [T][ ] read book\nNow you have 0 tasks in the list.",
+        assertEquals("No matching tasks on your plate. Try another keyword.", kaya.getResponse("find missing"));
+        assertEquals("Taken off your plate:\n  [T][ ] read book\nYou have 0 tasks on your plate.",
                 kaya.getResponse("delete 1"));
-        assertEquals("Here are the tasks in your list:", new Kaya(dataFile).getResponse("list"));
+        assertEquals("Your task list is empty. Time for a kopi break?", new Kaya(dataFile).getResponse("list"));
     }
 
     @Test
@@ -51,8 +54,8 @@ public class KayaTest {
         kaya.getResponse("todo read book");
 
         for (String command : new String[] {"mark 2", "unmark 0", "delete abc", "find"}) {
-            assertTrue(kaya.getResponse(command).startsWith("OOPS!!! "));
-            assertEquals("Here are the tasks in your list:\n1.[T][ ] read book", kaya.getResponse("list"));
+            assertTrue(kaya.getResponse(command).startsWith("Hmm. "));
+            assertEquals("Here's what's on your plate:\n1.[T][ ] read book", kaya.getResponse("list"));
         }
     }
 
@@ -62,6 +65,7 @@ public class KayaTest {
 
         String response = kaya.getResponse("nonsense");
 
-        assertTrue(response.startsWith("OOPS!!! I don't recognise that command."));
+        assertTrue(response.startsWith("Hmm. I don't recognise that command."));
+        assertTrue(response.contains("Try todo, deadline, event, list, find, mark, unmark, delete, update, or bye."));
     }
 }

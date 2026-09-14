@@ -32,10 +32,10 @@ public class UpdateTest {
             "update 3 /to 2026-09-22"
         };
         for (String update : updates) {
-            assertTrue(kaya.getResponse(update).startsWith("Got it. I've updated this task:"));
+            assertTrue(kaya.getResponse(update).startsWith("All sorted. I've updated this task:"));
             assertEquals(kaya.getResponse("list"), new Kaya(file).getResponse("list"));
         }
-        assertEquals("Here are the tasks in your list:\n1.[T][X] new name"
+        assertEquals("Here's what's on your plate:\n1.[T][X] new name"
                 + "\n2.[D][X] final report (by: Sep 22 2026)"
                 + "\n3.[E][X] team meeting (from: Sep 22 2026 to: Sep 22 2026)", kaya.getResponse("list"));
     }
@@ -55,7 +55,7 @@ public class UpdateTest {
             "update 2 /to tomorrow", "update 2 /to 2026-09-25 /from 2026-09-21"
         };
         for (String update : invalid) {
-            assertTrue(kaya.getResponse(update).startsWith("OOPS!!! "), update);
+            assertTrue(kaya.getResponse(update).startsWith("Hmm. "), update);
             assertEquals(original, kaya.getResponse("list"), update);
             assertEquals(original, new Kaya(file).getResponse("list"), update);
         }
@@ -65,7 +65,7 @@ public class UpdateTest {
     public void update_description_preservesIncompleteStatusAndLiteralText() {
         Kaya kaya = new Kaya(temporaryDirectory.resolve("kaya.txt"));
         kaya.getResponse("todo old name");
-        assertEquals("Got it. I've updated this task:\n  [T][ ] notes /by example",
+        assertEquals("All sorted. I've updated this task:\n  [T][ ] notes /by example",
                 kaya.getResponse("  update   1   /description   notes /by example  "));
     }
 }

@@ -16,7 +16,7 @@
     <top>
         <VBox spacing="3.0" styleClass="app-header">
             <Label text="Kaya" styleClass="app-title" />
-            <Label text="Your task companion" styleClass="app-subtitle" />
+            <Label text="Your kopitiam companion" styleClass="app-subtitle" />
         </VBox>
     </top>
     <center>
