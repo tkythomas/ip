@@ -1,20 +1,23 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
 
-<fx:root alignment="TOP_RIGHT"
+<fx:root alignment="TOP_LEFT"
          maxWidth="1.7976931348623157E308"
-         spacing="8.0"
+         minWidth="0.0"
          type="javafx.scene.layout.HBox"
          xmlns="http://javafx.com/javafx/17"
          xmlns:fx="http://javafx.com/fxml/1">
     <children>
-        <Label fx:id="dialog" minHeight="-Infinity" styleClass="dialog-label" wrapText="true" />
-        <Label fx:id="avatar" alignment="CENTER" minHeight="42.0" minWidth="42.0" styleClass="avatar-label" />
+        <VBox fx:id="messageContainer" minWidth="0.0" spacing="5.0">
+            <Label fx:id="speakerLabel" styleClass="speaker-label" />
+            <Label fx:id="dialog"
+                   maxWidth="1.7976931348623157E308"
+                   minHeight="-Infinity"
+                   minWidth="0.0"
+                   styleClass="dialog-label"
+                   wrapText="true" />
+        </VBox>
     </children>
-    <padding>
-        <Insets bottom="6.0" left="10.0" right="10.0" top="6.0" />
-    </padding>
 </fx:root>

@@ -2,7 +2,9 @@ package kaya.ui;
 
 import javafx.animation.PauseTransition;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.fxml.FXML;
+import javafx.scene.control.Button;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
@@ -22,6 +24,9 @@ public class MainWindow {
     @FXML
     private TextField userInput;
 
+    @FXML
+    private Button sendButton;
+
     private Kaya kaya;
 
     /**
@@ -32,11 +37,13 @@ public class MainWindow {
     }
 
     /**
-     * Configures automatic scrolling after the FXML fields are injected.
+     * Configures automatic scrolling and disables Send when there is no command.
      */
     @FXML
     public void initialize() {
         dialogContainer.heightProperty().addListener(observable -> scrollPane.setVvalue(1.0));
+        sendButton.disableProperty().bind(
+                Bindings.createBooleanBinding(() -> userInput.getText().isBlank(), userInput.textProperty()));
     }
 
     /**
@@ -65,6 +72,7 @@ public class MainWindow {
                 DialogBox.getUserDialog(input),
                 DialogBox.getKayaDialog(response));
         userInput.clear();
+        userInput.requestFocus();
 
         if (input.equals("bye")) {
             PauseTransition farewellDelay = new PauseTransition(Duration.seconds(1));
