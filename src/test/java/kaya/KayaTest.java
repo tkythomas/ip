@@ -142,4 +142,35 @@ public class KayaTest {
         }
         assertEquals("Your task list is empty. Time for a kopi break?", kaya.getResponse("list"));
     }
+
+    @Test
+    public void getResponse_listAndBye_requireExactCommandsWithoutChangingSavedTasks() throws IOException {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        Kaya kaya = new Kaya(file);
+        kaya.getResponse("todo keep this task");
+        String original = Files.readString(file);
+
+        for (String command : List.of("list extra", "bye later")) {
+            assertTrue(kaya.getResponse(command).contains("does not take any extra details"), command);
+            assertEquals(original, Files.readString(file), command);
+        }
+        assertEquals("Here's what's on your plate:\n1.[T][ ] keep this task", kaya.getResponse("  list  "));
+        assertEquals("See you! One thing at a time, okay?", kaya.getResponse("  bye  "));
+        assertEquals(original, Files.readString(file));
+    }
+
+    @Test
+    public void getResponse_duplicateDescriptions_preservesBothTasksAndDeletesOnlySelectedOne() {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        Kaya kaya = new Kaya(file);
+        kaya.getResponse("todo read book");
+        assertTrue(kaya.getResponse("todo read book").contains("2 tasks on your plate"));
+        kaya.getResponse("mark 1");
+
+        assertEquals("Here's what I found on your plate:\n1.[T][X] read book\n2.[T][ ] read book",
+                kaya.getResponse("find BOOK"));
+        assertEquals(kaya.getResponse("list"), new Kaya(file).getResponse("list"));
+        kaya.getResponse("delete 1");
+        assertEquals("Here's what's on your plate:\n1.[T][ ] read book", new Kaya(file).getResponse("list"));
+    }
 }

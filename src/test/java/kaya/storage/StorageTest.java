@@ -1,5 +1,6 @@
 package kaya.storage;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -158,5 +159,71 @@ public class StorageTest {
         assertThrows(IOException.class, () -> storage.saveTasks(List.of(new Todo("replacement"))));
         assertTrue(Files.isSymbolicLink(link));
         assertEquals("original data", Files.readString(target));
+    }
+
+    @Test
+    public void saveAndLoadTasks_unicodeSeparatorsAndNewlines_preservesDescriptionExactly() throws IOException {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        String description = "读书 | café /by notes =\nsecond line\twith a tab";
+        Todo task = new Todo(description);
+        task.markAsDone();
+        Storage storage = new Storage(file);
+
+        storage.saveTasks(List.of(task));
+        List<Task> loaded = storage.loadTasks();
+
+        assertEquals(1, loaded.size());
+        assertEquals(description, loaded.get(0).getDescription());
+        assertTrue(loaded.get(0).isDone());
+        assertEquals(0, storage.getSkippedRecordCount());
+        assertEquals(1, Files.readAllLines(file).size());
+    }
+
+    @Test
+    public void loadTasks_malformedRecordShapesAndDates_keepsValidNeighbouringRecords() throws IOException {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        String valid = "T | 0 | dmFsaWQ=\n";
+        String[] malformed = {
+            "T | 2 | dGFzaw==", "X | 0 | dGFzaw==", "T | 0 | %%%",
+            "T | 0 | dGFzaw== | extra", "D | 0 | dGFzaw==",
+            "E | 0 | dGFzaw== | MjAyNi0wOS0yMA==",
+            "D | 0 | dGFzaw== | MjAyNi0wMi0zMA==", "T | 0", ""
+        };
+        for (String record : malformed) {
+            Files.writeString(file, valid + record + "\n" + valid);
+            Storage storage = new Storage(file);
+            List<Task> loaded = storage.loadTasks();
+
+            assertEquals(2, loaded.size(), record);
+            assertEquals(List.of("valid", "valid"), loaded.stream().map(Task::getDescription).toList(), record);
+            assertEquals(1, storage.getSkippedRecordCount(), record);
+        }
+    }
+
+    @Test
+    public void loadTasks_invalidFileEncoding_blocksWritesAndPreservesOriginalBytes() throws IOException {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        byte[] invalidUtf8 = {(byte) 0xc3, 0x28};
+        Files.write(file, invalidUtf8);
+        Storage storage = new Storage(file);
+
+        assertThrows(IOException.class, storage::loadTasks);
+        assertThrows(IOException.class, () -> storage.saveTasks(List.of(new Todo("replacement"))));
+        assertArrayEquals(invalidUtf8, Files.readAllBytes(file));
+    }
+
+    @Test
+    public void loadTasks_repairedFile_resetsWarningCountAndAllowsSavingAgain() throws IOException {
+        Path file = temporaryDirectory.resolve("tasks.txt");
+        Files.writeString(file, "broken record\n");
+        Storage storage = new Storage(file);
+        assertTrue(storage.loadTasks().isEmpty());
+        assertEquals(1, storage.getSkippedRecordCount());
+
+        Files.writeString(file, "T | 0 | cmVjb3ZlcmVk\n");
+        assertEquals("recovered", storage.loadTasks().get(0).getDescription());
+        assertEquals(0, storage.getSkippedRecordCount());
+        storage.saveTasks(List.of(new Todo("saved after repair")));
+        assertEquals("saved after repair", new Storage(file).loadTasks().get(0).getDescription());
     }
 }

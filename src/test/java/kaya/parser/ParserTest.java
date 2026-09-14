@@ -2,11 +2,14 @@ package kaya.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 
 import org.junit.jupiter.api.Test;
 
+import kaya.command.CommandType;
+import kaya.command.UpdateCommand;
 import kaya.exception.KayaException;
 import kaya.task.Deadline;
 import kaya.task.Event;
@@ -107,5 +110,64 @@ public class ParserTest {
         }
         assertThrows(KayaException.class, () -> parser.parseDeadline(
                 "deadline report /by 2026-09-20 /by 2026-09-21"));
+    }
+
+    @Test
+    public void parseTodo_descriptionWithSpecialCharacters_preservesLiteralContent() throws KayaException {
+        assertEquals("读书  | café /by notes", parser.parseTodo("  todo\t读书  | café /by notes  ").getDescription());
+        for (String input : new String[] {"todo", " todo \t "}) {
+            assertThrows(KayaException.class, () -> parser.parseTodo(input), input);
+        }
+        assertEquals(CommandType.TODO, parser.parseCommandType("  todo\t读书 "));
+    }
+
+    @Test
+    public void parseDeadline_missingDate_explainsWhichValueIsMissing() {
+        KayaException error = assertThrows(KayaException.class, () -> parser.parseDeadline("deadline report /by  "));
+
+        assertTrue(error.getMessage().contains("date after /by"));
+    }
+
+    @Test
+    public void parseEvent_missingValues_identifiesTheMissingDetail() {
+        String[][] cases = {
+            {"event /from 2026-09-20 /to 2026-09-21", "description"},
+            {"event meeting /from /to 2026-09-21", "starting date"},
+            {"event meeting /from 2026-09-20 /to", "ending date"}
+        };
+        for (String[] example : cases) {
+            KayaException error = assertThrows(KayaException.class, () -> parser.parseEvent(example[0]));
+            assertTrue(error.getMessage().contains(example[1]), example[0]);
+        }
+    }
+
+    @Test
+    public void parseDateCommands_leapDayAndLiteralSlashes_respectsCalendarAndFieldBoundaries() throws KayaException {
+        Deadline deadline = parser.parseDeadline("deadline check folder/by and https://example.com /by 2024-02-29");
+
+        assertEquals("check folder/by and https://example.com", deadline.getDescription());
+        assertEquals(LocalDate.of(2024, 2, 29), deadline.getBy());
+        assertThrows(KayaException.class, () -> parser.parseDeadline("deadline report /by 2025-02-29"));
+        assertThrows(KayaException.class, () -> parser.parseEvent("event meeting /from tomorrow /to 2026-09-20"));
+    }
+
+    @Test
+    public void parseTaskIndex_numericBoundariesAndExtraArguments_rejectsInvalidSelection() throws KayaException {
+        for (String number : new String[] {"-1", "1.5", "1 2", "2147483648", "-2147483648"}) {
+            assertThrows(KayaException.class, () -> parser.parseTaskIndex("mark " + number, "mark", 3), number);
+        }
+        assertThrows(KayaException.class, () -> parser.parseTaskIndex("mark 1", "mark", 0));
+        assertEquals(2, parser.parseTaskIndex("  mark\t3  ", "mark", 3));
+    }
+
+    @Test
+    public void parseUpdate_whitespaceAndLiteralDescription_extractsOneField() throws KayaException {
+        UpdateCommand update = parser.parseUpdate("  update\t2\t/description  notes /by example  ", 2);
+
+        assertEquals(1, update.index());
+        assertEquals("/description", update.field());
+        assertEquals("notes /by example", update.value());
+        assertThrows(KayaException.class, () -> parser.parseUpdate("update 1 /description\t", 2));
+        assertThrows(KayaException.class, () -> parser.parseUpdate("update 1 /unknown text", 2));
     }
 }

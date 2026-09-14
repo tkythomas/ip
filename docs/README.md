@@ -9,6 +9,9 @@ add what's on your plate, and work through it one thing at a time.
 Kaya uses friendly phrases while keeping command instructions and error
 messages clear.
 
+For automated test commands, coverage reports, and manual checks, see the
+[testing guide](Testing.md).
+
 ## Adding deadlines
 
 // Describe the action and its outcome.
