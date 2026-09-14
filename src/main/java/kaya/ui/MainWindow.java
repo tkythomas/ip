@@ -53,8 +53,7 @@ public class MainWindow {
      */
     public void setKaya(Kaya kaya) {
         this.kaya = kaya;
-        dialogContainer.getChildren().add(DialogBox.getKayaDialog(
-                "Hello! I'm Kaya. What can I do for you?"));
+        dialogContainer.getChildren().add(DialogBox.getKayaDialog(Messages.GREETING));
     }
 
     /**

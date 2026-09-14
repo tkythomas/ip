@@ -10,13 +10,13 @@ import kaya.parser.Parser;
 import kaya.storage.Storage;
 import kaya.task.Task;
 import kaya.task.TaskList;
+import kaya.ui.Messages;
 import kaya.ui.Ui;
 
 /**
  * Coordinates Kaya's user interface, task list, parser, and storage.
  */
 public class Kaya {
-    private static final String SYSTEM_NAME = "Kaya";
     private static final Path DATA_FILE = Path.of("data", "kaya.txt");
 
     private final Parser parser;
@@ -40,7 +40,7 @@ public class Kaya {
      * Runs the command loop until the user exits or input ends.
      */
     public void run() {
-        ui.showGreeting(SYSTEM_NAME);
+        ui.showGreeting();
         while (ui.hasNextCommand()) {
             String input = ui.readCommand();
             ui.showLine();
@@ -65,9 +65,9 @@ public class Kaya {
         try {
             return processCommand(input.trim());
         } catch (KayaException exception) {
-            return "OOPS!!! " + exception.getMessage();
+            return Messages.ERROR_PREFIX + exception.getMessage();
         } catch (IOException exception) {
-            return "OOPS!!! I couldn't save your tasks: " + exception.getMessage();
+            return "Sorry, I couldn't save your tasks: " + exception.getMessage();
         }
     }
 
@@ -87,11 +87,11 @@ public class Kaya {
         switch (commandType) {
             case BYE -> {
                 requireExactCommand(input, "bye");
-                response = "Bye. Hope to see you again soon!";
+                response = Messages.FAREWELL;
             }
             case LIST -> {
                 requireExactCommand(input, "list");
-                response = formatTasks("Here are the tasks in your list:", tasks.asList());
+                response = Messages.formatTasks(Messages.TASKS_HEADING, Messages.EMPTY_LIST, tasks.asList());
             }
             case MARK -> {
                 response = markTask(input);
@@ -109,7 +109,7 @@ public class Kaya {
                 UpdateCommand update = parser.parseUpdate(input, tasks.size());
                 Task updatedTask = update.applyTo(tasks.get(update.index()));
                 tasks.set(update.index(), updatedTask);
-                response = "Got it. I've updated this task:\n  " + updatedTask;
+                response = "All sorted. I've updated this task:\n  " + updatedTask;
                 isTasksChanged = true;
             }
             case FIND -> {
@@ -149,7 +149,7 @@ public class Kaya {
         int index = parser.parseTaskIndex(input, "mark", tasks.size());
         Task task = tasks.get(index);
         task.markAsDone();
-        return "Nice! I've marked this task as done:\n  " + task;
+        return "Settled! You've finished:\n  " + task;
     }
 
     /**
@@ -163,7 +163,7 @@ public class Kaya {
         int index = parser.parseTaskIndex(input, "unmark", tasks.size());
         Task task = tasks.get(index);
         task.markAsNotDone();
-        return "OK, I've marked this task as not done yet:\n  " + task;
+        return "No rush. I've marked this task as not done yet:\n  " + task;
     }
 
     /**
@@ -176,8 +176,8 @@ public class Kaya {
     private String deleteTask(String input) throws KayaException {
         int index = parser.parseTaskIndex(input, "delete", tasks.size());
         Task removedTask = tasks.delete(index);
-        return "Noted. I've removed this task:\n  " + removedTask
-                + "\nNow you have " + tasks.size() + " tasks in the list.";
+        return "Taken off your plate:\n  " + removedTask
+                + "\n" + Messages.taskCount(tasks.size());
     }
 
     /**
@@ -189,7 +189,7 @@ public class Kaya {
      */
     private String findTasks(String input) throws KayaException {
         String keyword = parser.parseFindKeyword(input);
-        return formatTasks("Here are the matching tasks in your list:", tasks.find(keyword));
+        return Messages.formatTasks(Messages.MATCHES_HEADING, Messages.NO_MATCHES, tasks.find(keyword));
     }
 
     /**
@@ -200,25 +200,8 @@ public class Kaya {
      */
     private String addTask(Task task) {
         tasks.add(task);
-        return "Got it. I've added this task:\n  " + task
-                + "\nNow you have " + tasks.size() + " tasks in the list.";
-    }
-
-    /**
-     * Formats tasks as a heading followed by a one-based numbered list.
-     *
-     * @param heading the text displayed before the tasks
-     * @param matchingTasks the tasks to display
-     * @return the formatted task list
-     */
-    private String formatTasks(String heading, Iterable<Task> matchingTasks) {
-        StringBuilder response = new StringBuilder(heading);
-        int index = 1;
-        for (Task task : matchingTasks) {
-            response.append('\n').append(index).append('.').append(task);
-            index++;
-        }
-        return response.toString();
+        return "Added to your plate:\n  " + task
+                + "\n" + Messages.taskCount(tasks.size());
     }
 
     /**

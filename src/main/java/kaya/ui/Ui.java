@@ -40,15 +40,13 @@ public class Ui {
 
     /**
      * Displays Kaya's startup greeting.
-     *
-     * @param name the chatbot's name
      */
-    public void showGreeting(String name) {
+    public void showGreeting() {
         showLine();
         showBanner();
         showMessages(
-                "Hello! I'm " + name + ".",
-                "What can I do for you?");
+                Messages.GREETING,
+                "Try: todo read a book, list, or bye.");
         showLine();
     }
 
@@ -78,7 +76,7 @@ public class Ui {
      * @param message the error details to display
      */
     public void showError(String message) {
-        showMessage("OOPS!!! " + message);
+        showMessage("Sorry, " + message);
     }
 
     /**
@@ -87,8 +85,7 @@ public class Ui {
      * @param tasks the tasks to display
      */
     public void showTasks(List<Task> tasks) {
-        showMessage("Here are the tasks in your list:");
-        showNumberedTasks(tasks);
+        showMessage(Messages.formatTasks(Messages.TASKS_HEADING, Messages.EMPTY_LIST, tasks));
     }
 
     /**
@@ -97,19 +94,7 @@ public class Ui {
      * @param tasks the matching tasks to display
      */
     public void showMatchingTasks(List<Task> tasks) {
-        showMessage("Here are the matching tasks in your list:");
-        showNumberedTasks(tasks);
-    }
-
-    /**
-     * Displays the supplied tasks with one-based numbers.
-     *
-     * @param tasks the tasks to display
-     */
-    private void showNumberedTasks(List<Task> tasks) {
-        for (int i = 0; i < tasks.size(); i++) {
-            showMessage((i + 1) + "." + tasks.get(i));
-        }
+        showMessage(Messages.formatTasks(Messages.MATCHES_HEADING, Messages.NO_MATCHES, tasks));
     }
 
     /**
